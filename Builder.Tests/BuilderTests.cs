@@ -1,0 +1,221 @@
+using FluentAssertion.MSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Builder.Tests
+{
+    [TestClass]
+    public class BuilderTests
+    {
+        [TestMethod]
+        public void Build_should_return_the_object_with_all_properties_and_fields_populated_but_not_children_objects()
+        {
+            Any.ExcludeDefaultValues(true);
+            var builtObject = Builder<SutPoco>.New().Build();
+
+            Assert.That.This(builtObject)
+                .IsNotNull().And()
+                .HasNull(o => o.AnotherPocoField).And()
+                .HasNull(o => o.AnotherPocoProperty).And()
+                .HasNull(o => o.MorePocosField).And()
+                .HasNull(o => o.MorePocosProperty).And()
+                .HasNonDefault(o => o.CharField).And()
+                .HasNonDefault(o => o.CharProperty).And()
+                .HasNonDefault(o => o.DateTimeField).And()
+                .HasNonDefault(o => o.DateTimeProperty).And()
+                .HasNonDefault(o => o.DecimalField).And()
+                .HasNonDefault(o => o.DecimalProperty).And()
+                .HasNonDefault(o => o.DoubleField).And()
+                .HasNonDefault(o => o.DoubleProperty).And()
+                .HasNonDefault(o => o.FloatField).And()
+                .HasNonDefault(o => o.FloatProperty).And()
+                .HasNonDefault(o => o.IntField).And()
+                .HasNonDefault(o => o.IntProperty).And()
+                .HasNonDefault(o => o.LongField).And()
+                .HasNonDefault(o => o.LongProperty).And()
+                .HasNonDefault(o => o.StringField).And()
+                .HasNonDefault(o => o.StringProperty).And()
+                .HasNonDefault(o => o.TimeSpanField).And()
+                .HasNonDefault(o => o.TimeSpanProperty);
+
+            Any.ExcludeDefaultValues(false);
+        }
+
+        [TestMethod]
+        public void Build_should_return_the_object_with_all_properties_fields_and_first_level_children_objects_populated_when_specified()
+        {
+            Any.ExcludeDefaultValues(true);
+            var builtObject = Builder<SutPoco>.New().Build(1);
+
+            Assert.That.This(builtObject)
+                .IsNotNull().And()
+                .HasNonNull(o => o.AnotherPocoField, "With depth 1 the child object is expected to be populated")
+                    .HasNonDefault(o => o.AnotherPocoField.CharField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.CharProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.DateTimeField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.DateTimeProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.DecimalField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.DecimalProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.DoubleField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.DoubleProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.FloatField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.FloatProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.IntField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.IntProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.LongField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.LongProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.StringField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.StringProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.TimeSpanField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.TimeSpanProperty).And()
+                    .HasNull(o => o.AnotherPocoField.AnotherPocoField, "With depth 1 the grandchild object is expected to be null has it has depth 2").And()
+                .HasNonNull(o => o.AnotherPocoProperty, "With depth 1 the child object is expected to be populated").And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.DateTimeField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.DateTimeProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.DecimalField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.DecimalProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.DoubleField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.DoubleProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.FloatField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.FloatProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.IntField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.IntProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.LongField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.LongProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.StringField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.StringProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.TimeSpanField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.TimeSpanProperty).And()
+                    .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "With depth 1 the grandchild object is expected to be null has it has depth 2").And()
+                .HasNonEmpty(o => o.MorePocosField).And()
+                .HasNonEmpty(o => o.MorePocosProperty).And()
+                .HasNonDefault(o => o.CharField).And()
+                .HasNonDefault(o => o.CharProperty).And()
+                .HasNonDefault(o => o.DateTimeField).And()
+                .HasNonDefault(o => o.DateTimeProperty).And()
+                .HasNonDefault(o => o.DecimalField).And()
+                .HasNonDefault(o => o.DecimalProperty).And()
+                .HasNonDefault(o => o.DoubleField).And()
+                .HasNonDefault(o => o.DoubleProperty).And()
+                .HasNonDefault(o => o.FloatField).And()
+                .HasNonDefault(o => o.FloatProperty).And()
+                .HasNonDefault(o => o.IntField).And()
+                .HasNonDefault(o => o.IntProperty).And()
+                .HasNonDefault(o => o.LongField).And()
+                .HasNonDefault(o => o.LongProperty).And()
+                .HasNonDefault(o => o.StringField).And()
+                .HasNonDefault(o => o.StringProperty).And()
+                .HasNonDefault(o => o.TimeSpanField).And()
+                .HasNonDefault(o => o.TimeSpanProperty);
+
+            Assert.That.These(builtObject.MorePocosField)
+                .HaveCount(Builder<SutPoco>.NumberOfNestedEntitiesInCollections)
+                .AndEachElement()
+                    .HasNonDefault(o => o.CharField).And()
+                    .HasNonDefault(o => o.CharProperty).And()
+                    .HasNonDefault(o => o.DateTimeField).And()
+                    .HasNonDefault(o => o.DateTimeProperty).And()
+                    .HasNonDefault(o => o.DecimalField).And()
+                    .HasNonDefault(o => o.DecimalProperty).And()
+                    .HasNonDefault(o => o.DoubleField).And()
+                    .HasNonDefault(o => o.DoubleProperty).And()
+                    .HasNonDefault(o => o.FloatField).And()
+                    .HasNonDefault(o => o.FloatProperty).And()
+                    .HasNonDefault(o => o.IntField).And()
+                    .HasNonDefault(o => o.IntProperty).And()
+                    .HasNonDefault(o => o.LongField).And()
+                    .HasNonDefault(o => o.LongProperty).And()
+                    .HasNonDefault(o => o.StringField).And()
+                    .HasNonDefault(o => o.StringProperty).And()
+                    .HasNonDefault(o => o.TimeSpanField).And()
+                    .HasNonDefault(o => o.TimeSpanProperty).And()
+                    .HasNull(o => o.AnotherPocoProperty, "Expected child of a child to be null as depth is 1").And()
+                    .HasNull(o => o.AnotherPocoField, "Expected child of a child to be null as depth is 1").And()
+                    .HasNull(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
+                    .HasNull(o => o.MorePocosProperty, "Expected child of a child to be null as depth is 1");
+
+            Assert.That.These(builtObject.MorePocosProperty)
+                .HaveCount(Builder<SutPoco>.NumberOfNestedEntitiesInCollections)
+                .AndEachElement()
+                    .HasNonDefault(o => o.CharField).And()
+                    .HasNonDefault(o => o.CharProperty).And()
+                    .HasNonDefault(o => o.DateTimeField).And()
+                    .HasNonDefault(o => o.DateTimeProperty).And()
+                    .HasNonDefault(o => o.DecimalField).And()
+                    .HasNonDefault(o => o.DecimalProperty).And()
+                    .HasNonDefault(o => o.DoubleField).And()
+                    .HasNonDefault(o => o.DoubleProperty).And()
+                    .HasNonDefault(o => o.FloatField).And()
+                    .HasNonDefault(o => o.FloatProperty).And()
+                    .HasNonDefault(o => o.IntField).And()
+                    .HasNonDefault(o => o.IntProperty).And()
+                    .HasNonDefault(o => o.LongField).And()
+                    .HasNonDefault(o => o.LongProperty).And()
+                    .HasNonDefault(o => o.StringField).And()
+                    .HasNonDefault(o => o.StringProperty).And()
+                    .HasNonDefault(o => o.TimeSpanField).And()
+                    .HasNonDefault(o => o.TimeSpanProperty).And()
+                    .HasNull(o => o.AnotherPocoProperty, "Expected child of a child to be null as depth is 1").And()
+                    .HasNull(o => o.AnotherPocoField, "Expected child of a child to be null as depth is 1").And()
+                    .HasNull(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
+                    .HasNull(o => o.MorePocosProperty, "Expected child of a child to be null as depth is 1");
+        }
+
+        [TestMethod]
+        public void Build_should_return_the_object_with_all_properties_fields_and_two_levels_of_children_objects_populated_when_specified()
+        {
+            Any.ExcludeDefaultValues(true);
+            var builtObject = Builder<SutPoco>.New().Build(2);
+
+            Assert.That.This(builtObject)
+                .IsNotNull().And()
+                .HasNonNull(o => o.AnotherPocoField, "Child of the build entity has depth 1 and expected to be non-null")
+                    .HasNonDefault(o => o.AnotherPocoField.CharField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.CharProperty).And()
+                    .HasNonNull(o => o.AnotherPocoField.AnotherPocoField, "Grandchild of the build entity has depth 2 and expected to be non-null").And()
+                        .HasNonDefault(o => o.AnotherPocoField.AnotherPocoField.CharField).And()
+                        .HasNonDefault(o => o.AnotherPocoField.AnotherPocoField.CharProperty).And()
+                        .HasNull(o => o.AnotherPocoField.AnotherPocoField.AnotherPocoField, "Great-grandchild of the build entity has depth 3 and expected to be null").And()
+                .HasNonNull(o => o.AnotherPocoProperty, "Child of the build entity has depth 1 and expected to be non-null").And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
+                    .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
+                    .HasNonNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "Grandchild of the build entity has depth 2 and expected to be non-null").And()
+                        .HasNonDefault(o => o.AnotherPocoProperty.AnotherPocoProperty.CharField).And()
+                        .HasNonDefault(o => o.AnotherPocoProperty.AnotherPocoProperty.CharProperty).And()
+                        .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty.AnotherPocoProperty, "Great-grandchild of the build entity has depth 3 and expected to be null").And()
+                .HasNonEmpty(o => o.MorePocosField).And()
+                .HasNonEmpty(o => o.MorePocosProperty).And()
+                .HasNonDefault(o => o.CharField).And()
+                .HasNonDefault(o => o.CharProperty);
+
+            Assert.That.These(builtObject.MorePocosField)
+                .HaveCount(Builder<SutPoco>.NumberOfNestedEntitiesInCollections)
+                .AndEachElement()
+                    .HasNonDefault(o => o.CharField).And()
+                    .HasNonDefault(o => o.CharProperty).And()
+                    .HasNonNull(o => o.AnotherPocoField, "Child of an item of the collection has depth 2 and expected to be not null").And()
+                        .HasNonDefault(o => o.AnotherPocoField.CharField).And()
+                        .HasNonDefault(o => o.AnotherPocoField.CharProperty).And()
+                        .HasNull(o => o.AnotherPocoField.AnotherPocoField, "Grandchild of an item of the collection has depth 3 and expected to be null").And()        
+                    .HasNonNull(o => o.AnotherPocoProperty, "Child of an item of the collection has depth 2 and expected to be not null").And()
+                        .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
+                        .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
+                        .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "Grandchild of an item of the collection has depth 3 and expected to be null");
+
+            Assert.That.These(builtObject.MorePocosProperty)
+                .HaveCount(Builder<SutPoco>.NumberOfNestedEntitiesInCollections)
+                .AndEachElement()
+                    .HasNonDefault(o => o.CharField).And()
+                    .HasNonDefault(o => o.CharProperty).And()
+                    .HasNonNull(o => o.AnotherPocoField, "Child of an item of the collection has depth 2 and expected to be not null").And()
+                        .HasNonDefault(o => o.AnotherPocoField.CharField).And()
+                        .HasNonDefault(o => o.AnotherPocoField.CharProperty).And()
+                        .HasNull(o => o.AnotherPocoField.AnotherPocoField, "Grandchild of an item of the collection has depth 3 and expected to be null").And()
+                    .HasNonNull(o => o.AnotherPocoProperty, "Child of an item of the collection has depth 2 and expected to be not null").And()
+                        .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
+                        .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
+                        .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "Grandchild of an item of the collection has depth 3 and expected to be null");
+        }
+    }
+}

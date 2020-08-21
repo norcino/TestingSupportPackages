@@ -23,5 +23,18 @@ To help have smaller concise setup steps, **[Builder](#Builder)** is the package
 
 ## Packages
 ### Builder
+<img src="https://github.com/norcino/TestingSupportPackages/blob/master/Builder/Logo.png" alt="Builder" width="64"/>
+[Builder](Builder/Readme.md) allows to create one or more instances of a class with the possibility to specify custom creation to override the random generation of data. Ideal for unit test setup, allow to create test setup where the reader has a more evident view of what data is really needed to create the test conditions.
+```
+var listOfHundredUsers = Builder<User>.New().BuildMany(100);
+```
 ### AnonymousData
-### FluentAssertion for MSTest
+
+### Fluent Assertion for MSTest
+<img src="https://github.com/norcino/TestingSupportPackages/blob/master/FluentAssertion.MSTest/Logo.png" alt="FluentAssertion for MSTest" width="64"/>
+[FluentAssertion.MSTest](FluentAssertion.MSTest/Readme.md) allows to write chanined assertions fluently in one statement, including _words_ helpful to make the reading of the assertions more fluent, friendly and clear.
+```
+var user = sut.GetUserById(userId);
+Assert.That.This(user).HasNonNull(u => u.Email).And().Has(u => u.Name == "Bob");
+```
+To find out more follow the link to get to the dedicated _[readme.md](FluentAssertion.MSTest/Readme.md)_.

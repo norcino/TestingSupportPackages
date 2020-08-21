@@ -16,25 +16,35 @@ Most likely altough, the test is focusend on specific data conditions that can b
 To help have smaller concise setup steps, **[Builder](#Builder)** is the package you might be interested in.
 
 ### DRY
+Everyone seems to be fully aware that repatition is bad, but especially in tests I often find repetitive code to setup entities needed for the testing, it is frustrating and even the simple extraction of an helper method is often ignored.
+With builder, you only need to invoke the build method and specify the specific data you want only for those properties relevant for the test.
 
 ### No ambiguity
+In tests, assertions over strings and numbers are often reason of confusion, do I really have to expect that ID, is that permission what I really should expect, is that magic number meaningful? To help, **[AnonymousData](#AnonymousData)** allow you to populate variables with values which are hidden from start, with a clear readable statement.
 
 ### Clear expectations
+When using testing framework I like that *Assert*, being a reference to a stati class, is always styled with a different colour, that at least allows you to pick where you are asserting, useful because I happened to find Assertions spreaded in the test method and this doesn't help to understand what is expected in the test.
+Worse is when using libraries like FluentAssertion, you have to repeat yourself getting one by one the properties you need to test from the result object, spreading the verifications in multiple lines which are not even highlighet like with the *Assert*.
+For these reasons and more, I decided to create **[Fluent Assertion for MSTest](#Fluent-Assertion-For-MSTest)**, this should help you create clear, fluent and concise expectetions.
+
 
 ## Packages
 ### Builder
 <img src="https://github.com/norcino/TestingSupportPackages/blob/master/Builder/Logo.png" alt="Builder" width="64"/>
+
 [Builder](Builder/Readme.md) allows to create one or more instances of a class with the possibility to specify custom creation to override the random generation of data. Ideal for unit test setup, allow to create test setup where the reader has a more evident view of what data is really needed to create the test conditions.
-```
+````
 var listOfHundredUsers = Builder<User>.New().BuildMany(100);
-```
+````
+
 ### AnonymousData
 
 ### Fluent Assertion for MSTest
 <img src="https://github.com/norcino/TestingSupportPackages/blob/master/FluentAssertion.MSTest/Logo.png" alt="FluentAssertion for MSTest" width="64"/>
+
 [FluentAssertion.MSTest](FluentAssertion.MSTest/Readme.md) allows to write chanined assertions fluently in one statement, including _words_ helpful to make the reading of the assertions more fluent, friendly and clear.
-```
+````
 var user = sut.GetUserById(userId);
 Assert.That.This(user).HasNonNull(u => u.Email).And().Has(u => u.Name == "Bob");
-```
+````
 To find out more follow the link to get to the dedicated _[readme.md](FluentAssertion.MSTest/Readme.md)_.

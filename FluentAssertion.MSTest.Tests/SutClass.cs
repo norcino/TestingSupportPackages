@@ -5,6 +5,9 @@ namespace FluentAssertion.MSTest.Tests
 {
     internal class SutClass
     {
+        public int IntProperty { get; set; }
+        public string StringProperty { get; set; }
+
         public SutPoco Add(SutPoco poco1, SutPoco poco2)
         {
             var result = new SutPoco

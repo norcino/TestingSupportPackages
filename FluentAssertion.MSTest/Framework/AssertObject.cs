@@ -14,9 +14,5 @@ namespace FluentAssertion.MSTest.Framework
         {
             Object = subject;
         }
-    }
+    }    
 }
-
-// TODO
-// - AreEqual when have same values
-// - AreSame when same instance

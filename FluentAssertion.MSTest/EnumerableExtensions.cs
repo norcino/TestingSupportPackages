@@ -35,16 +35,20 @@ namespace FluentAssertion.MSTest
         }        
         #endregion
 
-        public static AssertCollection<T> IsNotNull<T>(this AssertCollection<T> assertCollection)
+        public static AssertCollection<T> AreNotNull<T>(this AssertCollection<T> assertCollection)
         {
             Assert.IsNotNull(assertCollection.Collection);
             return assertCollection;
         }
 
-        public static AssertCollection<T> IsNotNullOrEmpty<T>(this AssertCollection<T> assertCollection)
+        public static AssertCollection<T> AreNotNullOrEmpty<T>(this AssertCollection<T> assertCollection, string message = null)
         {
-            Assert.IsNotNull(assertCollection.Collection, "The collection is null");
-            Assert.IsTrue(assertCollection.Collection.Any(), "The collection is empty");
+            if(assertCollection.Collection == null)
+                throw new AssertFailedException(message ?? "Collection expected to not be null, but it was");
+
+            if (!assertCollection.Collection.Any())
+                throw new AssertFailedException(message ?? "Collection expected to not be empty, but it was");
+            
             return assertCollection;
         }
 
@@ -130,6 +134,13 @@ namespace FluentAssertion.MSTest
             
             return assertCollection;
         }
+
+        #region Collection Element Assertions
+        public static AssertObjectInCollection<T> AndThisElement<T>(this AssertObjectInCollection<T> assertObjectInCollection)
+        {
+            return assertObjectInCollection;
+        }
+        #endregion
 
         #region Helpers
         private static MemberInfo GetMemberInfoFromExpression<T, P>(Expression<Func<T, P>> member)

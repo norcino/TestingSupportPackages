@@ -18,7 +18,7 @@ namespace FluentAssertion.MSTest
         #endregion
 
         #region Assertions
-        public static AssertAction ExecutesInLessThan(this AssertAction assertAction, long milliseconds)
+        public static AssertAction ExecutesInLessThan(this AssertAction assertAction, long milliseconds, string message = null)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -27,12 +27,12 @@ namespace FluentAssertion.MSTest
 
             var elapsed = stopwatch.ElapsedMilliseconds;
             if (elapsed > milliseconds)
-                Assert.Fail($"Expected to exceute in less than {milliseconds}ms but took {elapsed}ms");
+                Assert.Fail(message ?? $"Expected to exceute in less than {milliseconds}ms but took {elapsed}ms");
 
             return assertAction;
         }
 
-        public static AssertAction DoesNotThrowException(this AssertAction assertAction)
+        public static AssertAction DoesNotThrowException(this AssertAction assertAction, string message = null)
         {
             try
             {
@@ -40,12 +40,12 @@ namespace FluentAssertion.MSTest
             }
             catch (Exception e)
             {
-                Assert.Fail($"Expected to execute action without exceptions but '{e.GetType()}', with error '{e.Message}' was thrown instead");
+                Assert.Fail(message ?? $"Expected to execute action without exceptions but '{e.GetType()}', with error '{e.Message}' was thrown instead");
             }
             return assertAction;
         }
 
-        public static AssertAction Throws(this AssertAction assertAction)
+        public static AssertAction Throws(this AssertAction assertAction, string message = null)
         {
             try
             {
@@ -56,11 +56,12 @@ namespace FluentAssertion.MSTest
                 return assertAction;
             }
 
-            Assert.Fail("Action was expected to throw an exception");
+            Assert.Fail(message ?? "Action was expected to throw an exception");
+
             return assertAction;
         }
 
-        public static AssertAction Throws<T>(this AssertAction assertAction, string message = null) where T : Exception
+        public static AssertAction Throws<T>(this AssertAction assertAction, string expectedExceptionMessage = null, string message = null) where T : Exception
         {
             try
             {
@@ -68,15 +69,15 @@ namespace FluentAssertion.MSTest
             }
             catch (T e)
             {
-                if (message == null) return assertAction;
+                if (expectedExceptionMessage == null) return assertAction;
 
-                if (e.Message == message)
+                if (e.Message == expectedExceptionMessage)
                     return assertAction;
                 else
-                    Assert.Fail($"Expected error message to be: \"{message}\"\r\nBut was: \"{e.Message}\"");
+                    Assert.Fail(message ?? $"Expected error message to be: [{expectedExceptionMessage}]\r\nBut was: [{e.Message}]");
             }
 
-            Assert.Fail("The Action was expected to throw an exception");
+            Assert.Fail(message ?? "The Action was expected to throw an exception");
             return assertAction;
         }
         #endregion

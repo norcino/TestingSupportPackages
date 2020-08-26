@@ -294,6 +294,38 @@ namespace FluentAssertion.MSTest
         }
         #endregion
 
+        // TODO Review
+        #region Types
+        /// <summary>
+        /// Verify that the object has the desired type
+        /// </summary>
+        /// <typeparam name="T">Type of the object</typeparam>
+        /// <typeparam name="O">Expected Object type to verify</typeparam>
+        /// <param name="assertObject">Assert object</param>
+        public static AssertObject<O> IsDirivedOf<T, O>(this AssertObject<O> assertObject, string message = null)
+        {
+            if (assertObject.Object is T)
+            {
+                return assertObject;
+            }
+            throw new AssertFailedException(message ?? $"Expected type to be derived of {typeof(T)} but was {assertObject.GetType()}");
+        }
+
+        /// <summary>
+        /// Verify that the object has the desired type
+        /// </summary>
+        /// <typeparam name="T">Type of the object</typeparam>
+        /// <typeparam name="O">Expected Object type to verify</typeparam>
+        /// <param name="assertObject">Assert object</param>
+        public static AssertObject<O> Is<T, O>(this AssertObject<O> assertObject, Type type, string message = null)
+        {
+            if (assertObject.Object.GetType() == type)
+            {
+                return assertObject;
+            }
+            throw new AssertFailedException(message ?? $"Expected type {typeof(T)} but was {assertObject.GetType()}");
+        }
+        #endregion
         #region Helpers
         private static MemberInfo GetMemberInfoFromExpression<T, P>(Expression<Func<T, P>> member)
         {

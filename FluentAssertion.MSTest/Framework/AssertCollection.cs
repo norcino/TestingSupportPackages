@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System;
 
 namespace FluentAssertion.MSTest.Framework
 {
@@ -16,13 +17,20 @@ namespace FluentAssertion.MSTest.Framework
 
         public AssertCollection(IEnumerable<T> enumerable)
         {
-            Collection = new ReadOnlyCollection<T>(enumerable.ToList());
+            if (enumerable != null)
+                Collection = new ReadOnlyCollection<T>(enumerable?.ToList());
+        }
+    }
+
+    public class AssertObjectInCollection<T>
+    {
+        public readonly AssertCollection<T> AssertCollection;
+        public readonly T Element;
+
+        public AssertObjectInCollection(AssertCollection<T> collection, T element)
+        {
+            Element = element;
+            AssertCollection = collection;
         }
     }
 }
-
-// TODO
-// - AreEqual
-// - AreEquivalent where order do not matter
-// - Contains
-// - DoesNotContain

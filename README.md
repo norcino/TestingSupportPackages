@@ -1,3 +1,5 @@
+![.NET Core](https://github.com/norcino/TestingSupportPackages/workflows/.NET%20Core/badge.svg)
+
 # Testing Support Packages
 Testing support packages is a repository with the source code of multiple Nuget Packages designed to support testing, from building anonymous data and entities to the usage of fluent assertion with MSTest.
 

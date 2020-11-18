@@ -64,7 +64,7 @@ namespace Builder
             return entity;
         }
 
-        protected virtual object GenerateAnonymousData(object entity, Type propertyType, string propertyName, int hierarchyDepth)
+        internal virtual object GenerateAnonymousData(object entity, Type propertyType, string propertyName, int hierarchyDepth)
         {
             if (propertyType == typeof(string))
                 return Any.String(propertyName);
@@ -98,6 +98,12 @@ namespace Builder
 
             if (propertyType == typeof(TimeSpan))
                 return Any.TimeSpan();
+            
+            if (propertyType?.BaseType == typeof(Enum))
+            {
+                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(propertyType).Length - 1);
+                return Enum.GetValues(propertyType).GetValue(randomIndex);
+            }
 
             if (propertyType.IsValueType)
             {
@@ -136,7 +142,7 @@ namespace Builder
             return null;
         }
 
-        protected object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth)
+        internal object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth)
         {
             try
             {

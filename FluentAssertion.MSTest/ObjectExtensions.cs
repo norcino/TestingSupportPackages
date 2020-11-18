@@ -85,7 +85,7 @@ namespace FluentAssertion.MSTest
         /// <returns>AssertObject</returns>
         public static AssertObject<bool> IsFalse(this AssertObject<bool> assertObject, string message = null)
         {
-            Assert.IsTrue(assertObject.Object, message ?? "Expected to false, but was true");
+            Assert.IsFalse(assertObject.Object, message ?? "Expected to false, but was true");
             return assertObject;
         }
 

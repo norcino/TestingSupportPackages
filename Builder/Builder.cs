@@ -7,6 +7,14 @@ using System.Reflection;
 
 namespace Builder
 {
+    // TODO Handled Immutable Objects
+    // Create constructor parameters and use activator to create the instance
+    // Consider using mocking framework and mock ref objects instead of creating them??
+    // Maybe assume Builder is only used to create DTOs and Entities so ref objects are other DTOs or Entities?
+    // Add BindingFlags.NonPublic when getting properties
+    // TE cannot be enforced as new()
+
+
     /// <inheritdoc cref="IBuilder{TE}"/>
     public class Builder<TE> : IBuilder<TE> where TE : class, new()
     {
@@ -17,9 +25,10 @@ namespace Builder
             return (Builder<TE>)Activator.CreateInstance(typeof(Builder<TE>));
         }
 
+        #region Build
         /// <inheritdoc cref="IBuilder{TE}.Build()"/>
         public virtual TE Build(int hierarchyDepth = 0)
-        {
+        {            
             var e = (TE)Activator.CreateInstance(typeof(TE));
             var properties = e.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
             
@@ -36,25 +45,9 @@ namespace Builder
             }
             return e;
         }
-        
-        /// <inheritdoc cref="IBuilder{TE}.BuildMany(int, Action<TE, int>)"/>
-        public virtual List<TE> BuildMany(int numberOfEntities, Action<TE, int> entitySetupAction = null)
-        {
-            if (numberOfEntities < 1)
-                throw new ArgumentOutOfRangeException($"{nameof(numberOfEntities)} must be greater than zero");
-
-            var result = new List<TE>();
-            for (var i = 1; i <= numberOfEntities; i++)
-            {
-                var entity = Build();
-                entitySetupAction?.Invoke(entity, i);
-                result.Add(entity);
-            }
-            return result;
-        }
 
         /// <inheritdoc cref="IBuilder{TE}.Build(Action{TE})"/>
-        public virtual TE Build(Action<TE> entitySetupAction)
+        public virtual TE Build(Action<TE> entitySetupAction, bool useRandomValues = true)
         {
             if (entitySetupAction == null)
                 throw new ArgumentNullException($"{nameof(entitySetupAction)}");
@@ -63,7 +56,36 @@ namespace Builder
             entitySetupAction(entity);
             return entity;
         }
+        #endregion
 
+        #region BuildMany
+        /// <inheritdoc cref="IBuilder{TE}.BuildMany(int, Action<TE, int>)"/>
+        public virtual List<TE> BuildMany(int numberOfEntities, Action<TE, int> entitySetupAction = null, bool useRandomValues = true)
+        {
+            if (numberOfEntities < 1)
+                throw new ArgumentOutOfRangeException($"{nameof(numberOfEntities)} must be greater than zero");
+
+            var result = new List<TE>();
+            for (var i = 1; i <= numberOfEntities; i++)
+            {
+                TE entity;
+                if (useRandomValues)
+                {
+                    entity = Build();
+                }
+                else
+                {
+                    entity = (TE)Activator.CreateInstance(typeof(TE));
+                }
+
+                entitySetupAction?.Invoke(entity, i);
+                result.Add(entity);
+            }
+            return result;
+        }
+        #endregion
+
+        #region Helpers
         internal virtual object GenerateAnonymousData(object entity, Type propertyType, string propertyName, int hierarchyDepth)
         {
             if (propertyType == typeof(string))
@@ -194,5 +216,6 @@ namespace Builder
                 return null;
             }
         }
+        #endregion
     }
 }

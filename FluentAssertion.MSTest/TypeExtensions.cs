@@ -15,7 +15,7 @@ namespace FluentAssertion.MSTest
         /// <typeparam name="T">Type of the object</typeparam>
         /// <typeparam name="O">Expected Object type to verify</typeparam>
         /// <param name="assertObject">Assert object</param>
-        public static void IsDirivedOf<T, O>(this AssertObject<O> assertObject, string message = null)
+        public static void IsDerivedFrom<T, O>(this AssertObject<O> assertObject, string message = null)
         {
             if (assertObject.Object is T)
             {

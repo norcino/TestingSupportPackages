@@ -11,10 +11,10 @@ This is an alternative approach to invasive extension methods suggested using in
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/FluentAssertion.MSTest</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>mstest, netstandard, netcore, fluentassertion, fluent, TDD, BDD, unittest, test, testing, vstest</PackageTags>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
-    <Version>0.1.0</Version>
-    <PackageReleaseNotes>First release, contains a reasonable amount of methods to let you test fluently, clearly and consistently.</PackageReleaseNotes>
+    <AssemblyVersion>0.1.1.0</AssemblyVersion>
+    <FileVersion>0.1.1.0</FileVersion>
+    <Version>0.1.1</Version>
+    <PackageReleaseNotes>Fixed issu with IsFalse asseretion</PackageReleaseNotes>
     <Title>Fluent Assertion for MSTest</Title>
   </PropertyGroup>
 

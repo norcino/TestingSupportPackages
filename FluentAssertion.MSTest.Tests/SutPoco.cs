@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace FluentAssertion.MSTest.Tests
 {
+#pragma warning disable 0649
     internal class SutPoco
     {
         public SutPoco AnotherPocoField;
@@ -31,4 +32,5 @@ namespace FluentAssertion.MSTest.Tests
         public DateTime DateTimeProperty { get; set; }
         public TimeSpan TimeSpanProperty { get; set; }
     }
+#pragma warning restore 0649
 }

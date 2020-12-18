@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace FluentAssertion.MSTest.Tests
 {
@@ -63,31 +64,20 @@ namespace FluentAssertion.MSTest.Tests
         {
             var p1 = new SutPoco
             {
-                BoolProperty = Any.Bool(),
-                IntProperty = Any.Int(),
-                LongProperty = Any.Long(),
-                StringProperty = Any.String(),
-                DoubleProperty = Any.Double(),
-                DateTimeProperty = Any.DateTime()
+                BoolProperty = Any.Bool()
             };
 
             var p2 = new SutPoco
             {
-                BoolProperty = !p1.BoolProperty,
-                IntProperty = p1.IntProperty,
-                LongProperty = p1.LongProperty,
-                StringProperty = p1.StringProperty,
-                DoubleProperty = p1.DoubleProperty,
-                DateTimeProperty = p1.DateTimeProperty
+                BoolProperty = !p1.BoolProperty
             };
 
             Assert.That
-                .Invoking(() => 
+                .Invoking(() =>
                     Assert.That.This(p1).HasSameProperties(p2))
-                .Throws<AssertFailedException>($"Assert.AreEqual failed. " + 
-                    $"Expected:<{p1.BoolProperty}>. Actual:<{p2.BoolProperty}>. "+
-                    $"Property 'BoolProperty' of type MSTest.FluentAssertion.Tests.SutPoco has value {p1.BoolProperty} " + 
-                    $"but was expected {p2.BoolProperty}");
+                .Throws<AssertFailedException>($"Assert.AreEqual failed. Expected:<{p1.BoolProperty}>. " +
+                                $"Actual:<{p2.BoolProperty}>. Expected Property 'BoolProperty' of type FluentAssertion.MSTest.Tests.SutPoco " +
+                                $"to have value [{p1.BoolProperty}] but was [{p2.BoolProperty}]");
         }
 
         [TestMethod]
@@ -95,31 +85,20 @@ namespace FluentAssertion.MSTest.Tests
         {
             var p1 = new SutPoco
             {
-                BoolProperty = Any.Bool(),
                 IntProperty = Any.Int(),
-                LongProperty = Any.Long(),
-                StringProperty = Any.String(),
-                DoubleProperty = Any.Double(),
-                DateTimeProperty = Any.DateTime()
             };
 
             var p2 = new SutPoco
             {
-                BoolProperty = p1.BoolProperty,
-                IntProperty = p1.IntProperty + 1,
-                LongProperty = p1.LongProperty,
-                StringProperty = p1.StringProperty,
-                DoubleProperty = p1.DoubleProperty,
-                DateTimeProperty = p1.DateTimeProperty
+                IntProperty = p1.IntProperty + 1
             };
-
+            
             Assert.That
                 .Invoking(() =>
                     Assert.That.This(p1).HasSameProperties(p2))
-                .Throws<AssertFailedException>($"Assert.AreEqual failed. " +
-                    $"Expected:<{p1.IntProperty}>. Actual:<{p2.IntProperty}>. " +
-                    $"Property 'IntProperty' of type MSTest.FluentAssertion.Tests.SutPoco has value {p1.IntProperty} " +
-                    $"but was expected {p2.IntProperty}");
+                .Throws<AssertFailedException>($"Assert.AreEqual failed. Expected:<{p1.IntProperty}>. "+
+                                $"Actual:<{p2.IntProperty}>. Expected Property 'IntProperty' of type FluentAssertion.MSTest.Tests.SutPoco "+
+                                $"to have value [{p1.IntProperty}] but was [{p2.IntProperty}]");
         }
         #endregion
 
@@ -146,14 +125,14 @@ namespace FluentAssertion.MSTest.Tests
             
             Assert
                 .That
-                .This(result)
-                .Has(r => r.StringProperty == p1.StringProperty + p2.StringProperty)
+                .The(result)
+                .HasProperty(r => r.StringProperty).WithValue(p1.StringProperty + p2.StringProperty)
                 .And()
-                .Has(r => r.LongProperty == p1.LongProperty + p2.LongProperty)
+                .HasProperty(r => r.LongProperty).WithValue(p1.LongProperty + p2.LongProperty)
                 .And()
-                .Has(r => r.IntProperty == p1.IntProperty + p2.IntProperty)
+                .HasProperty(r => r.IntProperty).WithValue(p1.IntProperty + p2.IntProperty)
                 .And()
-                .Has(r => r.BoolProperty == (p1.BoolProperty && p2.BoolProperty));
+                .HasProperty(r => r.BoolProperty).WithValue(p1.BoolProperty && p2.BoolProperty);
         }
     }
 }

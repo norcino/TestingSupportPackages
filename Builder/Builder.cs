@@ -7,6 +7,14 @@ using System.Reflection;
 
 namespace Builder
 {
+    // TODO Handled Immutable Objects
+    // Create constructor parameters and use activator to create the instance
+    // Consider using mocking framework and mock ref objects instead of creating them??
+    // Maybe assume Builder is only used to create DTOs and Entities so ref objects are other DTOs or Entities?
+    // Add BindingFlags.NonPublic when getting properties
+    // TE cannot be enforced as new()
+
+
     /// <inheritdoc cref="IBuilder{TE}"/>
     public class Builder<TE> : IBuilder<TE> where TE : class, new()
     {
@@ -17,9 +25,10 @@ namespace Builder
             return (Builder<TE>)Activator.CreateInstance(typeof(Builder<TE>));
         }
 
+        #region Build
         /// <inheritdoc cref="IBuilder{TE}.Build()"/>
         public virtual TE Build(int hierarchyDepth = 0)
-        {
+        {            
             var e = (TE)Activator.CreateInstance(typeof(TE));
             var properties = e.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
             
@@ -36,25 +45,9 @@ namespace Builder
             }
             return e;
         }
-        
-        /// <inheritdoc cref="IBuilder{TE}.BuildMany(int, Action<TE, int>)"/>
-        public virtual List<TE> BuildMany(int numberOfEntities, Action<TE, int> entitySetupAction = null)
-        {
-            if (numberOfEntities < 1)
-                throw new ArgumentOutOfRangeException($"{nameof(numberOfEntities)} must be greater than zero");
-
-            var result = new List<TE>();
-            for (var i = 1; i <= numberOfEntities; i++)
-            {
-                var entity = Build();
-                entitySetupAction?.Invoke(entity, i);
-                result.Add(entity);
-            }
-            return result;
-        }
 
         /// <inheritdoc cref="IBuilder{TE}.Build(Action{TE})"/>
-        public virtual TE Build(Action<TE> entitySetupAction)
+        public virtual TE Build(Action<TE> entitySetupAction, bool useRandomValues = true)
         {
             if (entitySetupAction == null)
                 throw new ArgumentNullException($"{nameof(entitySetupAction)}");
@@ -63,8 +56,37 @@ namespace Builder
             entitySetupAction(entity);
             return entity;
         }
+        #endregion
 
-        protected virtual object GenerateAnonymousData(object entity, Type propertyType, string propertyName, int hierarchyDepth)
+        #region BuildMany
+        /// <inheritdoc cref="IBuilder{TE}.BuildMany(int, Action<TE, int>)"/>
+        public virtual List<TE> BuildMany(int numberOfEntities, Action<TE, int> entitySetupAction = null, bool useRandomValues = true)
+        {
+            if (numberOfEntities < 1)
+                throw new ArgumentOutOfRangeException($"{nameof(numberOfEntities)} must be greater than zero");
+
+            var result = new List<TE>();
+            for (var i = 1; i <= numberOfEntities; i++)
+            {
+                TE entity;
+                if (useRandomValues)
+                {
+                    entity = Build();
+                }
+                else
+                {
+                    entity = (TE)Activator.CreateInstance(typeof(TE));
+                }
+
+                entitySetupAction?.Invoke(entity, i);
+                result.Add(entity);
+            }
+            return result;
+        }
+        #endregion
+
+        #region Helpers
+        internal virtual object GenerateAnonymousData(object entity, Type propertyType, string propertyName, int hierarchyDepth)
         {
             if (propertyType == typeof(string))
                 return Any.String(propertyName);
@@ -98,6 +120,12 @@ namespace Builder
 
             if (propertyType == typeof(TimeSpan))
                 return Any.TimeSpan();
+            
+            if (propertyType?.BaseType == typeof(Enum))
+            {
+                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(propertyType).Length - 1);
+                return Enum.GetValues(propertyType).GetValue(randomIndex);
+            }
 
             if (propertyType.IsValueType)
             {
@@ -136,7 +164,7 @@ namespace Builder
             return null;
         }
 
-        protected object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth)
+        internal object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth)
         {
             try
             {
@@ -188,5 +216,6 @@ namespace Builder
                 return null;
             }
         }
+        #endregion
     }
 }

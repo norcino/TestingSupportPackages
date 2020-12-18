@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+using System.Text;
 using System.Threading;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
@@ -47,21 +49,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="maxLength">Maximum number of digits</param>
         /// <param name="allowZero">True by default allows zero as result</param>
         /// <param name="onlyPositive">True by default allows only postive integers including zero</param>
+        /// <param name="minValue">Minimum value of the range</param>
+        /// <param name="maxValue">Maximum value of the range (This has priority over lenght)</param>
         /// <returns>Random integer number</returns>
-        public static int Int(int maxLength = 5, bool allowZero = true, bool onlyPositive = true)
-        {
+        public static int Int(int maxLength = 5, bool allowZero = true, bool onlyPositive = true, int? minValue = null, int? maxValue = null)
+        {            
             if (_doNotAcceptDefaultValues) allowZero = false;
+
+            var max = maxValue ?? int.MaxValue;
+            var min = minValue ?? int.MinValue;
 
             if (maxLength < 1)
                 throw new ArgumentOutOfRangeException($"{nameof(maxLength)} must be greater than zero");
 
             if (maxLength > 10)
                 throw new ArgumentOutOfRangeException($"{nameof(maxLength)} cannot be greater than 10");
-            
-            if(onlyPositive)
-                return GetThreadRandom().Next(allowZero ? 0 : 1, (10 ^ maxLength) - 1);
 
-            return GetThreadRandom().Next(int.MinValue, int.MaxValue);
+            if(maxValue.HasValue && minValue.HasValue)
+                return GetThreadRandom().Next(minValue.Value, maxValue.Value);
+
+            var maxValueForLenght = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
+            
+            if (onlyPositive)
+                return GetThreadRandom().Next(allowZero ? 0 : 1, maxValueForLenght);
+
+            return GetThreadRandom().Next(min, max);
         }
 
         /// <summary>
@@ -83,28 +95,39 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Get a random string of lenght 10 with prefix Name_
         /// </example>
         /// <code>
-        /// var expectedResult = Any.String(10, "Name");
+        /// var expectedResult = Any.String(10, "Name_");
+        /// </code>
+        /// <example>
+        /// Get a random UTF-16 string, long 10 characters
+        /// </example>
+        /// <code>
+        /// var expectedResult = Any.String(length: 10, utf: true);
         /// </code>
         /// <param name="length">Length of the random part of the string</param>
         /// <param name="prefix">Prefix of the generated string</param>
+        /// <param name="utf">Setting to true will generate UTF-16 string</param>
         /// <returns>Randomly generated string</returns>
-        public static string String(string prefix = "", int length = 15)
+        public static string String(string prefix = "", int length = 15, bool utf = false)
         {
             if (length < 1)
                 throw new ArgumentOutOfRangeException($"{nameof(length)} must be greater than zero");
 
-            var casualString = string.Empty;
-            while (casualString.Length < length)
-            {
-                casualString += Guid.NewGuid().ToString();
-            }
-
-            var result = string.IsNullOrWhiteSpace(prefix) ? casualString.Substring(0, length) : $"{prefix}_{casualString.Substring(0, length)}";
+            if (length < prefix.Length)
+                throw new ArgumentOutOfRangeException($"{nameof(length)} should be greater then the lenght of the given {nameof(prefix)}");
             
-            if (_doNotAcceptDefaultValues && default(string) == result)
-                return String(prefix, length);
+            const int asciiCharacterStart = 65; // ascii character code start
+            const int asciiCharacterEnd = 122; // ascii character code end
 
-            return result;
+            var stringBuilder = new StringBuilder(prefix);
+            while (stringBuilder.Length < length)
+            {
+                if(utf)
+                    stringBuilder.Append(Char());
+                else
+                    stringBuilder.Append((char)(GetThreadRandom().Next(asciiCharacterStart, asciiCharacterEnd + 1) % 255));                
+            }
+            
+            return stringBuilder.ToString();
         }
 
         /// <summary>
@@ -198,7 +221,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 {
                     result += GetThreadRandom().Next(0, int.MaxValue);
                 }
-            else
+            else if (result < 0)
                 while (result > int.MinValue)
                 {
                     result += GetThreadRandom().Next(int.MinValue, 0);
@@ -229,7 +252,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Generate random decimal with integer part made of 4 digits and decimal part made of 2 digits.
+        /// Generate random decimal with integer part made of up to 4 digits and decimal part made of 2 digits.
         /// The number of digits for integer and decimal part can be customized.
         /// </summary>
         /// <param name="integerLenght">Number of digits of the integer part of the result</param>
@@ -267,7 +290,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Generate a random TimeSpan of maximum 10 days.
+        /// Generate a random TimeSpan of maximum 1000 days.
         /// The maximum number of days, hours, minutes and seconds can be customised.
         /// </summary>
         /// <example>
@@ -280,20 +303,49 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Get a random timespan of maximum 5 minutes
         /// </example>
         /// <code>
-        /// var expectedResult = Any.TimeSpan(0, 0, 4);
+        /// var expectedResult = Any.TimeSpan(0, 0, 5);
         /// </code>
         /// <param name="maximumDays"></param>
         /// <returns></returns>
-        public static TimeSpan TimeSpan(int maximumDays = 9,
-            int maximumHours = 24,
-            int maximumMinutes = 59,
-            int maximumSeconds = 59)
+        public static TimeSpan TimeSpan(int? maximumDays = null,
+            int? maximumHours = null,
+            int? maximumMinutes = null,
+            int? maximumSeconds = null)
         {
-            var result = new TimeSpan(GetThreadRandom().Next(0, maximumDays),
-                GetThreadRandom().Next(0, maximumHours),
-                GetThreadRandom().Next(0, maximumMinutes),
-                GetThreadRandom().Next(0, maximumSeconds));
+            if (maximumDays > 1000) throw new ArgumentOutOfRangeException("The supported maximum days is 1000");
+            if (maximumMinutes > 59) throw new ArgumentOutOfRangeException("The supported maximum minutes is 59");
+            if (maximumSeconds > 59) throw new ArgumentOutOfRangeException("The supported maximum seconds is 59");
+            if (maximumHours > 23) throw new ArgumentOutOfRangeException("The supported maximum hours is 23");
+            
+            if ((maximumDays.HasValue && maximumDays == 0 || !maximumDays.HasValue) &&
+                (maximumMinutes.HasValue && maximumMinutes == 0 || !maximumMinutes.HasValue) &&
+                (maximumSeconds.HasValue && maximumSeconds == 0 || !maximumSeconds.HasValue) &&
+                (maximumHours.HasValue && maximumHours == 0 || !maximumHours.HasValue) &&
+                (maximumDays.HasValue || maximumHours.HasValue || maximumMinutes.HasValue || maximumSeconds.HasValue))
+                throw new ArgumentException("Cannot set all limits to zero");
 
+            var customLimit = false;
+
+            // If no limits are set, the maximum of 10 days is used
+            if (maximumDays == maximumHours &&
+                maximumMinutes == maximumSeconds &&
+                maximumHours == maximumSeconds &&
+                maximumSeconds == null)
+            {
+                customLimit = false;
+                maximumDays = 10;
+            } else customLimit = true;
+
+            var limitDays = 1000;
+            var limitHours = 23;
+            var limitMinutesSeconds = 59;
+
+            int days = GetThreadRandom().Next(0, maximumDays ?? (customLimit ? 0 : limitDays));
+            int hours = GetThreadRandom().Next(0, maximumHours ?? (customLimit ? 0 : limitHours));
+            int minutes = GetThreadRandom().Next(0, maximumMinutes ?? (customLimit ? 0 : limitMinutesSeconds));
+            int seconds = GetThreadRandom().Next(0, maximumSeconds ?? (customLimit ? 0 : limitMinutesSeconds));
+            var result = new TimeSpan(days, hours, minutes, seconds);
+                
             if (_doNotAcceptDefaultValues && default(TimeSpan) == result)
                 return TimeSpan(maximumDays, maximumHours, maximumMinutes, maximumSeconds);
 
@@ -323,7 +375,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </code>
         /// <param name="future">Optional boolean value, default value true will generate a date in the future</param>
         /// <param name="limit">Set a limit date and time either in the past or the future</param>
-        /// <returns>Random DateTime</returns>        
+        /// <returns>Random DateTime</returns>
         public static DateTime DateTime(bool future = true, DateTime? limit = null)
         {
             var now = System.DateTime.Now;
@@ -443,6 +495,92 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 return Char();
 
             return result;
+        }
+
+        /// <summary>
+        /// Get randomly an Enumeratio value
+        /// </summary>
+        /// <typeparam name="T">Enumeration type</typeparam>
+        /// <returns>A value of the enumeration</returns>
+        public static T In<T>() where T : Enum
+        {
+            var options = Enum.GetNames(typeof(T));
+            var values = Enum.GetValues(typeof(T));
+            
+            var randomIndex = GetThreadRandom().Next(0, options.Length - 1);
+
+            return (T)values.GetValue(randomIndex);
+        }
+
+        /// <summary>
+        /// Generate an object of type T with random properties and fields
+        /// </summary>
+        /// <typeparam name="T">Type of the object to generate</typeparam>
+        /// <returns>Instance of T with random properties and fields</returns>
+        public static T Of<T>() where T : new()
+        {
+            var e = (T)Activator.CreateInstance(typeof(T));
+            var properties = e.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var propertyInfo in properties)
+            {
+                propertyInfo.SetValue(e, GenerateAnonymousData(e, propertyInfo.PropertyType, propertyInfo.Name));
+            }
+
+            var fields = e.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var fieldInfo in fields)
+            {
+                fieldInfo.SetValue(e, GenerateAnonymousData(e, fieldInfo.FieldType, fieldInfo.Name));
+            }
+            return e;
+        }
+
+        internal static object GenerateAnonymousData(object entity, Type propertyType, string propertyName)
+        {
+            if (propertyType == typeof(string))
+                return Any.String(propertyName);
+
+            if (propertyType == typeof(sbyte) || propertyType == typeof(byte) || propertyType == typeof(Byte) || propertyType == typeof(SByte))
+                return Any.Byte();
+
+            if (propertyType == typeof(short) || propertyType == typeof(ushort) || propertyType == typeof(Int16) || propertyType == typeof(UInt16))
+                return Any.Short();
+
+            if (propertyType == typeof(int) || propertyType == typeof(uint) || propertyType == typeof(Int32) || propertyType == typeof(UInt32))
+                return Any.Int(3, false);
+
+            if (propertyType == typeof(long) || propertyType == typeof(ulong) || propertyType == typeof(Int64) || propertyType == typeof(UInt64))
+                return Any.Long();
+
+            if (propertyType == typeof(double) || propertyType == typeof(Double))
+                return Any.Double();
+
+            if (propertyType == typeof(decimal) || propertyType == typeof(Decimal))
+                return Any.Decimal();
+
+            if (propertyType == typeof(float) || propertyType == typeof(Single))
+                return Any.Float();
+
+            if (propertyType == typeof(char) || propertyType == typeof(Char))
+                return Any.Char();
+
+            if (propertyType == typeof(DateTime))
+                return Any.DateTime();
+
+            if (propertyType == typeof(TimeSpan))
+                return Any.TimeSpan();
+            
+            if (propertyType?.BaseType == typeof(Enum))
+            {
+                var randomIndex = GetThreadRandom().Next(0, Enum.GetNames(propertyType).Length - 1);
+                return Enum.GetValues(propertyType).GetValue(randomIndex);
+            }
+
+            if (propertyType.IsValueType)
+                return Activator.CreateInstance(propertyType);
+
+            return null;
         }
 
         /// <summary>

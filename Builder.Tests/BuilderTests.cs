@@ -1,5 +1,6 @@
 using FluentAssertion.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace Builder.Tests
 {
@@ -7,12 +8,178 @@ namespace Builder.Tests
     public class BuilderTests
     {
         [TestMethod]
+        public void BuildMany_should_generate_the_expected_number_of_results_with_the_same_default_behaviour_and_applies_the_customization_action()
+        {
+            var builtObjects = Builder<SutPoco>.New().BuildMany(100, (o,i) =>
+            {
+                o.StringField = $"Element#{i}";
+                o.IntField = i;
+                o.IntProperty = 0;
+                o.StringProperty = null;
+            });
+            
+            Assert.That.These(builtObjects)
+                .HaveCount(100)
+                .Contains(e => e.StringField == "Element#1").And().Contains(e => e.StringField == "Element#100")
+                .And()
+                .DoesNotContain(e => e.StringField == "Element#0").And().DoesNotContain(e => e.StringField == "Element#101")
+                .And()
+                .Contains(e => e.IntField == 1).And().Contains(e => e.IntField == 100).And()
+                .And()
+                .DoesNotContain(e => e.IntField == 0).And().DoesNotContain(e => e.IntField == 101)
+
+                .AndEachElement()
+                    .IsOfType(typeof(SutPoco))
+                    .HasNonDefault(i => i.TimeSpanProperty)
+                    .HasNonDefault(i => i.LongField)
+                    .HasNonDefault(i => i.DateTimeProperty)
+                    .HasProperty(i => i.StringField).WhichValueStartsWith("Element#").And()
+                    .HasProperty(i => i.StringProperty).WithValue(null).And()                    
+                    .HasProperty(i => i.IntProperty).WithValue(0);
+
+        }
+
+        [TestMethod]
+        public void BuildMany_should_generate_the_expected_number_of_results_with_properties_setup_as_specified_without_using_reandom_values()
+        {
+            var builtObjects = Builder<SutPoco>.New().BuildMany(100, (o, i) =>
+            {
+                o.StringField = $"Element#{i}";
+                o.IntField = i;
+                o.IntProperty = 0;
+                o.StringProperty = null;
+            }, false);
+
+            Assert.That.These(builtObjects)
+                .HaveCount(100)
+                .Contains(e => e.StringField == "Element#1").And().Contains(e => e.StringField == "Element#100")
+                .And()
+                .DoesNotContain(e => e.StringField == "Element#0").And().DoesNotContain(e => e.StringField == "Element#101")
+                .And()
+                .Contains(e => e.IntField == 1).And().Contains(e => e.IntField == 100).And()
+                .And()
+                .DoesNotContain(e => e.IntField == 0).And().DoesNotContain(e => e.IntField == 101)
+
+                .AndEachElement()
+                    .IsOfType(typeof(SutPoco))
+                    .HasDefault(i => i.TimeSpanProperty)
+                    .HasDefault(i => i.LongField)
+                    .HasDefault(i => i.DateTimeProperty)
+                    .HasProperty(i => i.StringField).WhichValueStartsWith("Element#").And()
+                    .HasProperty(i => i.StringProperty).WithValue(null).And()
+                    .HasProperty(i => i.IntProperty).WithValue(0);
+        }
+
+        [TestMethod]
+        public void BuildMany_should_generate_the_expected_number_of_results_with_the_same_default_behaviour_expected_for_Build()
+        {
+            var builtObjects = Builder<SutPoco>.New().BuildMany(100);
+
+            Assert.That.These(builtObjects)
+                .HaveCount(100)
+                .AndEachElement()
+                    .IsOfType(typeof(SutPoco))
+                    .HasNull(i => i.AnotherPocoField)
+                    .HasNull(i => i.AnotherPocoProperty)
+                    .HasNull(i => i.MorePocosField)
+                    .HasNull(i => i.MorePocosProperty)
+                    .HasNonDefault(i => i.CharField)
+                    .HasNonDefault(o => o.CharProperty);
+        }
+
+        [TestMethod]
+        public void Build_should_allow_to_customize_creation_to_highlight_relevant_properties_and_fields()
+        {
+            var expectedBoolField = Any.Bool();
+            var expectedIntField = Any.Int();
+            var expectedLongField = Any.Long();
+            var expectedStringField = Any.String();
+            var expectedDecimalField = Any.Decimal();
+            var expectedDoubleField = Any.Double();
+            var expectedFloatField = Any.Float();
+            var expectedCharField = Any.Char();
+            var expectedDateTimeField = Any.DateTime();
+            var expectedTimeSpanField = Any.TimeSpan();
+            var expectedEnumField = Any.In<SutEnum>();
+            var expectedBoolProperty = Any.Bool();
+            var expectedIntProperty = Any.Int();
+            var expectedLongProperty = Any.Long();
+            var expectedStringProperty = Any.String();
+            var expectedDecimalProperty = Any.Decimal();
+            var expectedDoubleProperty = Any.Double();
+            var expectedFloatProperty = Any.Float();
+            var expectedCharProperty = Any.Char();
+            var expectedDateTimeProperty = Any.DateTime();
+            var expectedTimeSpanProperty = Any.TimeSpan();
+            var expectedEnumProperty = Any.In<SutEnum>();
+
+            var builtObject = Builder<SutPoco>.New().Build(o => {
+                o.BoolField = expectedBoolField;
+                o.IntField = expectedIntField;
+                o.LongField = expectedLongField;
+                o.StringField = expectedStringField;
+                o.DecimalField = expectedDecimalField;
+                o.DoubleField = expectedDoubleField;
+                o.FloatField = expectedFloatField;
+                o.CharField = expectedCharField;
+                o.DateTimeField = expectedDateTimeField;
+                o.TimeSpanField = expectedTimeSpanField;
+                o.EnumField = expectedEnumField;
+                o.BoolProperty = expectedBoolProperty;
+                o.IntProperty = expectedIntProperty;
+                o.LongProperty = expectedLongProperty;
+                o.StringProperty = expectedStringProperty;
+                o.DecimalProperty = expectedDecimalProperty;
+                o.DoubleProperty = expectedDoubleProperty;
+                o.FloatProperty = expectedFloatProperty;
+                o.CharProperty = expectedCharProperty;
+                o.DateTimeProperty = expectedDateTimeProperty;
+                o.TimeSpanProperty = expectedTimeSpanProperty;
+                o.EnumProperty = expectedEnumProperty;
+            });
+
+            Assert.That.The(builtObject)
+                .HasProperty(o => o.BoolProperty)
+                    .WithValue(expectedBoolProperty)
+                .And()
+                .HasProperty(o => o.IntField)
+                    .WithValue(expectedIntField)
+                .And()
+                .HasProperty(o => o.CharField)
+                    .WithValue(expectedCharField)
+                .And()
+                .HasProperty(o => o.DateTimeField)
+                    .WithValue(expectedDateTimeField)
+                .And()
+                .HasProperty(o => o.DecimalField)
+                    .WithValue(expectedDecimalField)
+                .And()
+                .HasProperty(o => o.DoubleField)
+                    .WithValue(expectedDoubleField)
+                .And()
+                .HasProperty(o => o.EnumField)
+                    .WithValue(expectedEnumField)
+                .And()
+                .HasProperty(o => o.FloatField)
+                    .WithValue(expectedFloatField)
+                .And()
+                .HasProperty(o => o.LongField)
+                    .WithValue(expectedLongField)
+                .And()
+                .HasProperty(o => o.StringField)
+                    .WithValue(expectedStringField)
+                .And()
+                .HasProperty(o => o.TimeSpanField)
+                    .WithValue(expectedTimeSpanField);
+        }
+
+        [TestMethod]
         public void Build_should_return_the_object_with_all_properties_and_fields_populated_but_not_children_objects()
         {
             Any.ExcludeDefaultValues(true);
             var builtObject = Builder<SutPoco>.New().Build();
 
-            Assert.That.This(builtObject)
+            Assert.That.The(builtObject)
                 .IsNotNull().And()
                 .HasNull(o => o.AnotherPocoField).And()
                 .HasNull(o => o.AnotherPocoProperty).And()
@@ -35,9 +202,9 @@ namespace Builder.Tests
                 .HasNonDefault(o => o.StringField).And()
                 .HasNonDefault(o => o.StringProperty).And()
                 .HasNonDefault(o => o.TimeSpanField).And()
-                .HasNonDefault(o => o.TimeSpanProperty);
-
-            Any.ExcludeDefaultValues(false);
+                .HasNonDefault(o => o.TimeSpanProperty).And()                
+                .HasNonDefault(o => o.EnumField).And()
+                .HasNonDefault(o => o.EnumProperty);
         }
 
         [TestMethod]
@@ -46,7 +213,7 @@ namespace Builder.Tests
             Any.ExcludeDefaultValues(true);
             var builtObject = Builder<SutPoco>.New().Build(1);
 
-            Assert.That.This(builtObject)
+            Assert.That.The(builtObject)
                 .IsNotNull().And()
                 .HasNonNull(o => o.AnotherPocoField, "With depth 1 the child object is expected to be populated")
                     .HasNonDefault(o => o.AnotherPocoField.CharField).And()
@@ -67,7 +234,10 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.AnotherPocoField.StringProperty).And()
                     .HasNonDefault(o => o.AnotherPocoField.TimeSpanField).And()
                     .HasNonDefault(o => o.AnotherPocoField.TimeSpanProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.EnumField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoField.AnotherPocoField, "With depth 1 the grandchild object is expected to be null has it has depth 2").And()
+                
                 .HasNonNull(o => o.AnotherPocoProperty, "With depth 1 the child object is expected to be populated").And()
                     .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
                     .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
@@ -87,7 +257,10 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.AnotherPocoProperty.StringProperty).And()
                     .HasNonDefault(o => o.AnotherPocoProperty.TimeSpanField).And()
                     .HasNonDefault(o => o.AnotherPocoProperty.TimeSpanProperty).And()
+                    .HasNonDefault(o => o.AnotherPocoField.EnumField).And()
+                    .HasNonDefault(o => o.AnotherPocoField.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "With depth 1 the grandchild object is expected to be null has it has depth 2").And()
+               
                 .HasNonEmpty(o => o.MorePocosField).And()
                 .HasNonEmpty(o => o.MorePocosProperty).And()
                 .HasNonDefault(o => o.CharField).And()
@@ -130,6 +303,8 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.StringProperty).And()
                     .HasNonDefault(o => o.TimeSpanField).And()
                     .HasNonDefault(o => o.TimeSpanProperty).And()
+                    .HasNonDefault(o => o.EnumField).And()
+                    .HasNonDefault(o => o.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoProperty, "Expected child of a child to be null as depth is 1").And()
                     .HasNull(o => o.AnotherPocoField, "Expected child of a child to be null as depth is 1").And()
                     .HasNull(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
@@ -156,6 +331,8 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.StringProperty).And()
                     .HasNonDefault(o => o.TimeSpanField).And()
                     .HasNonDefault(o => o.TimeSpanProperty).And()
+                    .HasNonDefault(o => o.EnumField).And()
+                    .HasNonDefault(o => o.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoProperty, "Expected child of a child to be null as depth is 1").And()
                     .HasNull(o => o.AnotherPocoField, "Expected child of a child to be null as depth is 1").And()
                     .HasNull(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
@@ -166,7 +343,7 @@ namespace Builder.Tests
         public void Build_should_return_the_object_with_all_properties_fields_and_two_levels_of_children_objects_populated_when_specified()
         {
             Any.ExcludeDefaultValues(true);
-            var builtObject = Builder<SutPoco>.New().Build(2);
+            var builtObject = Builder<SutPoco>.New().Build(hierarchyDepth: 2);
 
             Assert.That.This(builtObject)
                 .IsNotNull().And()

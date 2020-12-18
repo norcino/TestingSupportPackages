@@ -2,6 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>Logo128.png</PackageIcon>
+    <Authors>Manuel Salvatori</Authors>
+    <Company />
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Through the class Any, this library allows you to create all sort of base types randomly, this will help clarify your code, especially while testing.
+A known issue with developers struggling with test data setup, is that often the initial, explicit hard coded value or variables, can leave questions about being the real expected input/output, or just a value.</Description>
+    <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/AnonymousData</PackageProjectUrl>
+    <PackageTags>testing, muck, stub</PackageTags>
+    <PackageReleaseNotes>First release which supports the creation of random int, long, bool, DateTime, TimeSpan and more.</PackageReleaseNotes>
+	<Title>Anonymouse Data Generator</Title>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Logo128.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

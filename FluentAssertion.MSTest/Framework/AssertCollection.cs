@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System;
 
 namespace FluentAssertion.MSTest.Framework
 {
@@ -20,9 +21,3 @@ namespace FluentAssertion.MSTest.Framework
         }
     }
 }
-
-// TODO
-// - AreEqual
-// - AreEquivalent where order do not matter
-// - Contains
-// - DoesNotContain

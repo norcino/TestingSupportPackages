@@ -21,6 +21,11 @@ namespace FluentAssertion.MSTest
         {
             return new AssertObject<T>(subject);
         }
+
+        public static AssertObject<T> The<T>(this Assert assert, T subject)
+        {
+            return new AssertObject<T>(subject);
+        }
         #endregion
 
         #region Chaining Assertion Words
@@ -85,7 +90,7 @@ namespace FluentAssertion.MSTest
         /// <returns>AssertObject</returns>
         public static AssertObject<bool> IsFalse(this AssertObject<bool> assertObject, string message = null)
         {
-            Assert.IsTrue(assertObject.Object, message ?? "Expected to false, but was true");
+            Assert.IsFalse(assertObject.Object, message ?? "Expected to false, but was true");
             return assertObject;
         }
 
@@ -201,11 +206,11 @@ namespace FluentAssertion.MSTest
                     {
                         TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
                         Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
-                            $"Expected Property '{propertyInfo.Name}' of type DateTime to have value value [{comparedObjectValue}] but was [{objectValue}]");
+                            $"Expected Property '{propertyInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
                         continue;
                     }
 
-                    Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{comparedObjectValue}] but was [{objectValue}]");
+                    Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
                 }
             }
             return assertObject;
@@ -234,6 +239,33 @@ namespace FluentAssertion.MSTest
         {
             Assert.IsTrue(assertions(assertObject.Object));
             return assertObject;
+        }
+
+        public static AssertPorperty<T,TP> HasProperty<T,TP>(this AssertObject<T> assertObject, Expression<Func<T,TP>> p)
+        {
+            return new AssertPorperty<T,TP>(assertObject.Object, p.Compile()(assertObject.Object));
+        }
+
+        public static AssertPorperty<T,TP> WithValue<T,TP>(this AssertPorperty<T,TP> assertProperty, TP value)
+        {
+            Assert.AreEqual(value, assertProperty.Property, $"Value '{value}' expected to be equal to '{assertProperty.Property}' but wasn't");
+            return assertProperty;
+        }
+
+        public static AssertPorperty<T, TP> ButAlso<T, TP>(this AssertPorperty<T, TP> assertProperty)
+        {
+            return assertProperty;
+        }
+
+        public static AssertPorperty<T, TP> IsNotNull<T, TP>(this AssertPorperty<T, TP> assertProperty)
+        {
+            Assert.IsNotNull(assertProperty.Property, $"Property was expected not to be null");
+            return assertProperty;
+        }
+
+        public static AssertObject<T> And<T,TP>(this AssertPorperty<T,TP> assertProperty)
+        {
+            return new AssertObject<T>(assertProperty.ParentObject);
         }
 
         public static AssertObject<T> HasNonDefault<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> property, string message = null)

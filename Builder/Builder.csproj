@@ -2,10 +2,28 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Object.Builder</PackageId>
+    <Authors>Manuel Salvatori</Authors>
+    <Company />
+    <Description>Builder allows to initialize one or more objects customizing the creation.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
+    <PackageIcon>Logo128.png</PackageIcon>
+    <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
+    <PackageReleaseNotes>First release which includes multiple building options for typed objects.</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AnonymousData\AnonymousData.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Logo128.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

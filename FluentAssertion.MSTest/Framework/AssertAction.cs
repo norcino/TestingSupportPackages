@@ -30,11 +30,6 @@ namespace FluentAssertion.MSTest.Framework
         /// </summary>
         public void Invoke()
         {
-            var x = _rootAction.Target;
-            var y = _rootAction.Method;
-            var k = _rootAction.DynamicInvoke();
-            var m = _rootAction.GetInvocationList();
-
             _rootAction.Invoke();
         }
     }

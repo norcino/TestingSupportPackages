@@ -29,10 +29,15 @@ namespace FluentAssertion.MSTest
             return assertCollection;
         }
 
-        public static AssertCollection<T> AndEachElement<T>(this AssertCollection<T> assertCollection)
+        public static AssertEachItem<T> AndEachElement<T>(this AssertCollection<T> assertCollection)
         {
-            return assertCollection;
-        }        
+            return new AssertEachItem<T>(assertCollection);
+        }
+
+        public static AssertEachItem<T> And<T, TP>(this AssertEachItemProperty<T, TP> assertProperty)
+        {
+            return assertProperty.AssertEachItemObject;
+        }
         #endregion
 
         public static AssertCollection<T> IsNotNull<T>(this AssertCollection<T> assertCollection)
@@ -70,10 +75,16 @@ namespace FluentAssertion.MSTest
         /// <returns></returns>
         public static AssertCollection<T> Contains<T>(this AssertCollection<T> assertCollection, Func<T, bool> assertions)
         {
-            Assert.IsTrue(assertCollection.Collection.Any(assertions));
+            Assert.IsTrue(assertCollection.Collection.Any(assertions), $"Expected to contain at least one item matching the assertion");
             return assertCollection;
         }
 
+        public static AssertCollection<T> DoesNotContain<T>(this AssertCollection<T> assertCollection, Func<T, bool> assertions)
+        {
+            Assert.IsFalse(assertCollection.Collection.Any(assertions), $"Expected to not contain any item matching the assertion");
+            return assertCollection;
+        }
+        
         public static AssertCollection<T> Have<T>(this AssertCollection<T> assertCollection, Func<T, bool> assertions)
         {
             return Are(assertCollection, assertions);
@@ -85,51 +96,112 @@ namespace FluentAssertion.MSTest
                 throw new AssertFailedException(message ?? $"Expected [{expectedCount}] elements, but the collection had [{assertCollection.Collection.Count}]");
             return assertCollection;
         }
-               
-        public static AssertCollection<T> HasNonNull<T, P>(this AssertCollection<T> assertCollection, Expression<Func<T, P>> member, string message = null) where P : new()
+
+        #region Each Item Assertions
+        public static AssertEachItem<T> And<T>(this AssertEachItem<T> assertEachItem)
         {
-            var memberInfo = GetMemberInfoFromExpression(member);
+            return assertEachItem;
+        }
+        
+        public static AssertEachItem<T> IsOfType<T>(this AssertEachItem<T> assertEachItem, Type type, string message = null)
+        {
             int iterationIndex = 1;
 
-            foreach (var collectionItem in assertCollection.Collection)
+            foreach (var collectionItem in assertEachItem.RootCollection.Collection)
             {
-                Assert.IsNotNull(member.Compile()(collectionItem), message ?? $"Expected property '{memberInfo.Name}' to not be null but for the item [{iterationIndex++}] of the collection was null");
+                if (collectionItem.GetType() != typeof(T))
+                {
+                    Assert.Fail(message ?? $"Collection expected to have all items of type '{type.Name}' but the item [{iterationIndex++}] was '{collectionItem.GetType().Name}'");
+                    return assertEachItem;
+                }
             }
 
-            return assertCollection;
+            return assertEachItem;
         }
 
-        public static AssertCollection<T> HasNull<T, P>(this AssertCollection<T> assertCollection, Expression<Func<T, P>> member, string message = null) where P : new()
+        public static AssertEachItemProperty<T, TP> HasProperty<T, TP>(this AssertEachItem<T> assertEachItem, Expression<Func<T, TP>> p)
         {
-            var memberInfo = GetMemberInfoFromExpression(member);
-            int iterationIndex = 1;
+            return new AssertEachItemProperty<T, TP>(assertEachItem, p);
+        }
 
-            foreach (var collectionItem in assertCollection.Collection)
+        public static AssertEachItem<T> HasNull<T, P>(this AssertEachItem<T> assertEachItem, Expression<Func<T, P>> property, string message = null)
+        {
+            var propertyInfo = GetMemberInfoFromExpression(property);
+
+            foreach (var collectionItem in assertEachItem.RootCollection.Collection)
             {
-                var value = member.Compile()(collectionItem);
-                Assert.IsNull(value, message ?? $"Expected property '{memberInfo.Name}' to be null but for the item [{iterationIndex++}] of the collection it was [{value}]");
+                var value = property.Compile()(collectionItem);
+                Assert.IsNull(value, message ?? $"Expected property '{propertyInfo.Name}' value null but it was '{value}'");
             }
-
-            return assertCollection;
+            return assertEachItem;
         }
 
-        public static AssertCollection<T> HasNonDefault<T, P>(this AssertCollection<T> assertCollection, Expression<Func<T, P>> member, string message = null)
+        public static AssertEachItem<T> HasNonNull<T, P>(this AssertEachItem<T> assertEachItem, Expression<Func<T, P>> property, string message = null)
         {
-            var memberInfo = GetMemberInfoFromExpression(member);
-            int iterationIndex = 1;
+            var propertyInfo = GetMemberInfoFromExpression(property);
 
-            foreach (var collectionItem in assertCollection.Collection)
+            foreach (var collectionItem in assertEachItem.RootCollection.Collection)
             {
-                var value = member.Compile()(collectionItem);
-
+                var value = property.Compile()(collectionItem);
+                Assert.IsNotNull(value, message ?? $"Expected property '{propertyInfo.Name}' value to be not null but it was");
+            }
+            return assertEachItem;
+        }
+        
+        public static AssertEachItem<T> HasNonDefault<T, P>(this AssertEachItem<T> assertEachItem, Expression<Func<T, P>> property, string message = null)
+        {
+            foreach (var collectionItem in assertEachItem.RootCollection.Collection)
+            {
+                var propertyInfo = GetMemberInfoFromExpression(property);
+                var value = property.Compile()(collectionItem);
                 if (value.Equals(default(P)))
                 {
-                    Assert.Fail(message ?? $"Expected property '{memberInfo.Name}' value ({value}) not to be the default value ({default(P)}), but for the item [{iterationIndex++}] of the collection it was");
+                    Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] not to be the default value [{default(P)}]");
                 }
-            }           
-            
-            return assertCollection;
+            }
+            return assertEachItem;
         }
+
+        public static AssertEachItem<T> HasDefault<T, P>(this AssertEachItem<T> assertEachItem, Expression<Func<T, P>> property, string message = null)
+        {
+            foreach (var collectionItem in assertEachItem.RootCollection.Collection)
+            {
+                var propertyInfo = GetMemberInfoFromExpression(property);
+                var value = property.Compile()(collectionItem);
+                if (!value.Equals(default(P)))
+                {
+                    Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] to be the default value [{default(P)}]");
+                }
+            }
+            return assertEachItem;
+        }        
+        #endregion
+
+        #region Each Item Property Assertions
+        public static AssertEachItemProperty<T, TP> WithValue<T, TP>(this AssertEachItemProperty<T, TP> assertProperty, TP value)
+        {
+            int iterationIndex = 1;
+
+            foreach (var collectionItem in assertProperty.AssertEachItemObject.RootCollection.Collection)
+            {
+                var actualValue = assertProperty.PropertyExpression.Compile()(collectionItem);
+                Assert.AreEqual(value, actualValue, $"The value [{actualValue}] of the property '{GetMemberName(assertProperty.PropertyExpression.Body)}' was expected to be equal to [{value}] but for item [{iterationIndex++}] wasn't");
+            }
+            return assertProperty;
+        }
+
+        public static AssertEachItemProperty<T, string> WhichValueStartsWith<T>(this AssertEachItemProperty<T, string> assertProperty, string value)
+        {
+            int iterationIndex = 1;
+
+            foreach (var collectionItem in assertProperty.AssertEachItemObject.RootCollection.Collection)
+            {
+                var actualValue = assertProperty.PropertyExpression.Compile()(collectionItem);
+                Assert.IsTrue(actualValue.StartsWith(value), $"The value [{actualValue}] of the property '{GetMemberName(assertProperty.PropertyExpression.Body)}' was expected to start with [{value}] but for item [{iterationIndex++}] wasn't");
+            }
+            return assertProperty;
+        }
+        #endregion
 
         #region Helpers
         private static MemberInfo GetMemberInfoFromExpression<T, P>(Expression<Func<T, P>> member)
@@ -140,6 +212,24 @@ namespace FluentAssertion.MSTest
                 throw new ArgumentException("The lambda expression 'member' should point to a valid Property or Field");
             }
             return memberInfo;
+        }
+
+        /// <summary>
+        /// Get the Member name from the expression passed in
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns>Member Name</returns>
+        private static string GetMemberName(Expression expression)
+        {
+            switch (expression.NodeType)
+            {
+                case ExpressionType.MemberAccess:
+                    return ((MemberExpression)expression).Member.Name;
+                case ExpressionType.Convert:
+                    return GetMemberName(((UnaryExpression)expression).Operand);
+                default:
+                    throw new NotSupportedException(expression.NodeType.ToString());
+            }
         }
         #endregion
     }

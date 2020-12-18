@@ -9,10 +9,10 @@ namespace FluentAssertion.MSTest.Tests
         {
             var result = new SutPoco
             {
-                BoolField = poco1.BoolField && poco2.BoolField,
-                IntField = poco1.IntField + poco2.IntField,
-                LongField = poco1.LongField + poco2.LongField,
-                StringField = poco1.StringField + poco2.StringField
+                BoolProperty = poco1.BoolProperty && poco2.BoolProperty,
+                IntProperty = poco1.IntProperty + poco2.IntProperty,
+                LongProperty = poco1.LongProperty + poco2.LongProperty,
+                StringProperty = poco1.StringProperty + poco2.StringProperty
             };
             return result;
         }

@@ -206,11 +206,11 @@ namespace FluentAssertion.MSTest
                     {
                         TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
                         Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
-                            $"Expected Property '{propertyInfo.Name}' of type DateTime to have value value [{comparedObjectValue}] but was [{objectValue}]");
+                            $"Expected Property '{propertyInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
                         continue;
                     }
 
-                    Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{comparedObjectValue}] but was [{objectValue}]");
+                    Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
                 }
             }
             return assertObject;

@@ -1,27 +1,100 @@
 ﻿using FluentAssertion.MSTest.Framework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FluentAssertion.MSTest
 {
     public static class EnumerableExtensions
     {
         #region Starting Assertion Words
-        public static AssertCollection<T> All<T>(this Assert assert, ICollection<T> collection)
-        {
-            return new AssertCollection<T>(collection);
-        }
-
         public static AssertCollection<T> These<T>(this Assert assert, ICollection<T> collection)
         {
             return new AssertCollection<T>(collection);
         }
+
+        public static AssertCollection<T> This<TC, T>(this Assert assert, ICollection<T> collection) where TC : ICollection<T>
+        {
+            return new AssertCollection<T>(collection);
+        }
         #endregion
+        public static AssertCollection<T> AreSameAs<T>(this AssertCollection<T> assertCollection, ICollection<T> otherCollection)
+        {
+            if (assertCollection.Collection == null && otherCollection != null)
+                Assert.Fail("The collection was expected to be a null collection but it wasn't");
+            
+            if (assertCollection.Collection != null && otherCollection == null)
+                Assert.Fail("The collection was expected to be Equivalent but the collection was null");
+            
+            if (assertCollection.Collection.Count != otherCollection.Count)
+                Assert.Fail($"The collection was expected to contain {assertCollection.Collection.Count} elements but contained {otherCollection.Count}");
+
+            foreach(var item in assertCollection.Collection)
+            {
+                //foreach (var comparedItem in otherCollection)
+                //{
+                //    foreach (var propertyInfo in assertObject.Object.GetType().GetProperties())
+                //    {
+                //        // Exclude properties
+                //        if (exclusions != null && ((IList)exclusions).Contains(propertyInfo.Name)) continue;
+
+                //        // Ignore Objects and Collections
+                //        if (propertyInfo.PropertyType.GetTypeInfo().IsValueType || propertyInfo.PropertyType == typeof(string))
+                //        {
+                //            var objectValue = assertObject.Object.GetType().GetProperty(propertyInfo.Name).GetValue(assertObject.Object, null);
+                //            var comparedObjectValue = comparedObject.GetType().GetProperty(propertyInfo.Name).GetValue(comparedObject, null);
+
+                //            if (objectValue is DateTime)
+                //            {
+                //                TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
+                //                Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
+                //                    $"Expected Property '{propertyInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
+                //                continue;
+                //            }
+
+                //            Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
+                //        }
+                //    }
+
+                //    foreach (var fieldInfo in assertObject.Object.GetType().GetFields())
+                //    {
+                //        // Exclude properties
+                //        if (exclusions != null && ((IList)exclusions).Contains(fieldInfo.Name)) continue;
+
+                //        // Ignore Objects and Collections
+                //        if (fieldInfo.FieldType.GetTypeInfo().IsValueType || fieldInfo.FieldType == typeof(string))
+                //        {
+                //            var objectValue = assertObject.Object.GetType().GetProperty(fieldInfo.Name).GetValue(assertObject.Object, null);
+                //            var comparedObjectValue = comparedObject.GetType().GetProperty(fieldInfo.Name).GetValue(comparedObject, null);
+
+                //            if (objectValue is DateTime)
+                //            {
+                //                TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
+                //                Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
+                //                    $"Expected Field '{fieldInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
+                //                continue;
+                //            }
+
+                //            Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Field '{fieldInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
+                //        }
+                //    }
+                //}
+                //if(!otherCollection.Contains(item))
+                //{
+
+                //    Assert.Fail($"The collection contains an item but this was not available found in the compared collection:\r\n{JsonSerializer.Serialize(item)}");
+                //}
+            }
+
+            return assertCollection;
+        }
 
         #region Chaining Assertion Words
         public static AssertCollection<T> And<T>(this AssertCollection<T> assertCollection)
@@ -76,6 +149,100 @@ namespace FluentAssertion.MSTest
         public static AssertCollection<T> Contains<T>(this AssertCollection<T> assertCollection, Func<T, bool> assertions)
         {
             Assert.IsTrue(assertCollection.Collection.Any(assertions), $"Expected to contain at least one item matching the assertion");
+            return assertCollection;
+        }
+
+        public static string AreSameObjects<T>(T subject, T comparedObject, int comparisonDepth = 0)
+        {            
+            // if there is a nesting higher then 100, skip further depth and stop the comparison
+            if (comparisonDepth > 100) return null;
+
+            foreach (var propertyInfo in typeof(T).GetProperties())
+            {
+                var objectValue = propertyInfo.GetValue(subject, null);
+                var comparedObjectValue = propertyInfo.GetValue(comparedObject, null);
+                // Value Types and strings
+                if (propertyInfo.PropertyType.GetTypeInfo().IsValueType || propertyInfo.PropertyType == typeof(string))
+                {
+                    if (objectValue is DateTime)
+                    {
+                        TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
+                        if (!(difference < TimeSpan.FromSeconds(1)))
+                            return $"Expected Property '{propertyInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]";
+                        continue;
+                    }
+
+                    if (objectValue != comparedObjectValue)
+                        return $"Expected Property '{propertyInfo.Name}' of type {objectValue.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]";
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType))
+                {
+                    // The property value is an enumerable, so check each element contained                    
+                    // TODO
+                }
+                else
+                {
+                    // If the property is a reference object recursively handle hit
+                    var result = AreSameObjects(objectValue, comparedObjectValue, comparisonDepth + 1);
+                    if (result != null) return result;
+                }
+            }
+
+            // The compared items are the same
+            return null;
+        }
+
+        public static AssertCollection<T> Contains<T>(this AssertCollection<T> assertCollection, T element)
+        {
+            //foreach (var currentItem in assertCollection.Collection)
+            //{
+            //    foreach (var propertyInfo in typeof(T).GetProperties())
+            //    {
+            //        // Ignore Objects and Collections
+            //        if (propertyInfo.PropertyType.GetTypeInfo().IsValueType || propertyInfo.PropertyType == typeof(string))
+            //        {
+            //            var objectValue = propertyInfo.GetValue(element, null);
+            //            var comparedObjectValue = propertyInfo.GetValue(element, null);
+
+            //            if (objectValue is DateTime)
+            //            {
+            //                TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
+            //                Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
+            //                    $"Expected Property '{propertyInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
+            //                continue;
+            //            }
+
+            //            Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
+            //        }
+            //    }
+
+            //    foreach (var fieldInfo in assertObject.Object.GetType().GetFields())
+            //    {
+            //        // Exclude properties
+            //        if (exclusions != null && ((IList)exclusions).Contains(fieldInfo.Name)) continue;
+
+            //        // Ignore Objects and Collections
+            //        if (fieldInfo.FieldType.GetTypeInfo().IsValueType || fieldInfo.FieldType == typeof(string))
+            //        {
+            //            var objectValue = assertObject.Object.GetType().GetProperty(fieldInfo.Name).GetValue(assertObject.Object, null);
+            //            var comparedObjectValue = comparedObject.GetType().GetProperty(fieldInfo.Name).GetValue(comparedObject, null);
+
+            //            if (objectValue is DateTime)
+            //            {
+            //                TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
+            //                Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
+            //                    $"Expected Field '{fieldInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
+            //                continue;
+            //            }
+
+            //            Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Field '{fieldInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
+            //        }
+            //        if (!assertCollection.Collection.Contains(element))
+            //        {
+            //            Assert.Fail($"The collection did not contain the expected element");
+            //        }
+            //    }
+            //}
             return assertCollection;
         }
 

@@ -31,6 +31,37 @@ namespace FluentAssertion.MSTest.Tests
         public char CharProperty { get; set; }
         public DateTime DateTimeProperty { get; set; }
         public TimeSpan TimeSpanProperty { get; set; }
+
+        internal SutPoco Clone()
+        {
+            return new SutPoco
+            {
+                AnotherPocoField = this.AnotherPocoField,
+                MorePocosField = this.MorePocosField,
+                BoolField = this.BoolField,
+                IntField = this.IntField,
+                LongField = this.LongField,
+                StringField = this.StringField,
+                DecimalField = this.DecimalField,
+                DoubleField = this.DoubleField,
+                FloatField = this.FloatField,
+                CharField = this.CharField,
+                DateTimeField = this.DateTimeField,
+                TimeSpanField = this.TimeSpanField,
+                AnotherPocoProperty = this.AnotherPocoProperty,
+                MorePocosProperty = this.MorePocosProperty,
+                BoolProperty = this.BoolProperty,
+                IntProperty = this.IntProperty,
+                LongProperty = this.LongProperty,
+                StringProperty = this.StringProperty,
+                DecimalProperty = this.DecimalProperty,
+                DoubleProperty = this.DoubleProperty,
+                FloatProperty = this.FloatProperty,
+                CharProperty = this.CharProperty,
+                DateTimeProperty = this.DateTimeProperty,
+                TimeSpanProperty = this.TimeSpanProperty
+            };
+        }
     }
 #pragma warning restore 0649
 }

@@ -213,26 +213,30 @@ namespace FluentAssertion.MSTest
                     Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Property '{propertyInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
                 }
             }
+
+            foreach (var fieldInfo in assertObject.Object.GetType().GetFields())
+            {
+                // Exclude properties
+                if (exclusions != null && ((IList)exclusions).Contains(fieldInfo.Name)) continue;
+
+                // Ignore Objects and Collections
+                if (fieldInfo.FieldType.GetTypeInfo().IsValueType || fieldInfo.FieldType == typeof(string))
+                {
+                    var objectValue = assertObject.Object.GetType().GetProperty(fieldInfo.Name).GetValue(assertObject.Object, null);
+                    var comparedObjectValue = comparedObject.GetType().GetProperty(fieldInfo.Name).GetValue(comparedObject, null);
+
+                    if (objectValue is DateTime)
+                    {
+                        TimeSpan difference = (DateTime)objectValue - (DateTime)comparedObjectValue;
+                        Assert.IsTrue(difference < TimeSpan.FromSeconds(1),
+                            $"Expected Field '{fieldInfo.Name}' of type DateTime to have value [{objectValue}] but was [{comparedObjectValue}]");
+                        continue;
+                    }
+
+                    Assert.AreEqual(objectValue, comparedObjectValue, $"Expected Field '{fieldInfo.Name}' of type {assertObject.Object.GetType()} to have value [{objectValue}] but was [{comparedObjectValue}]");
+                }
+            }
             return assertObject;
-        }
-
-        public static SamePropertyObject<T> Except<T>(this SamePropertyObject<T> assertObject, Expression<Func<T, object>> excludedProperty)
-        {
-            assertObject.Exclusions.Add(excludedProperty);
-            return assertObject;
-        }
-
-        public static SamePropertyObject<T> Except<T>(this AssertObject<T> assertObject, Expression<Func<T, object>> excludedProperty)
-        {
-            var assertSamePropertyObject = new SamePropertyObject<T>(assertObject.Object);
-            assertSamePropertyObject.Exclusions.Add(excludedProperty);
-            return assertSamePropertyObject;
-        }
-
-        public static AssertObject<T> HasSameProperties<T>(this SamePropertyObject<T> assertObject, T comparedObject)
-        {
-            assertObject.ExpectedObject = comparedObject;
-            return new AssertObject<T>(assertObject.ComparedObject);
         }
 
         public static AssertObject<T> Has<T>(this AssertObject<T> assertObject, Func<T, bool> assertions)

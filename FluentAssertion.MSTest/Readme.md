@@ -1,4 +1,5 @@
 # Fluent Assertion for MSTest
+**Project abandoned!** This was a nice excercise but I decided to abandon it to try to focus on more useful libraries like Builder and Minded. Feel free to branch and reuse all or part of this code, and please contact me if you need help.
 
 ## MSTest (Microsoft.VisualStudio.TestTools.UnitTesting)
 MSTest is the Microsoft Unit Testing library which does not requires third party frameworks.

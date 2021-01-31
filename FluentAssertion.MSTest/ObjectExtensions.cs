@@ -250,9 +250,14 @@ namespace FluentAssertion.MSTest
             return new AssertPorperty<T,TP>(assertObject.Object, p.Compile()(assertObject.Object));
         }
 
-        public static AssertPorperty<T,TP> WithValue<T,TP>(this AssertPorperty<T,TP> assertProperty, TP value)
+        public static AssertPorperty<T, TP> WithValue<T, TP>(this AssertPorperty<T, TP> assertProperty, TP value)
         {
             Assert.AreEqual(value, assertProperty.Property, $"Value '{value}' expected to be equal to '{assertProperty.Property}' but wasn't");
+            return assertProperty;
+        }
+        public static AssertPorperty<T, TP> Null<T, TP>(this AssertPorperty<T, TP> assertProperty)
+        {
+            Assert.IsNull(assertProperty.Property, $"Value expected to be null but was '{assertProperty.Property}'");
             return assertProperty;
         }
 
@@ -283,7 +288,27 @@ namespace FluentAssertion.MSTest
             return assertObject;
         }
 
-        public static AssertObject<T> HasNull<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> member, string message = null) where P : new()
+        public static AssertObject<T> HasDefault<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> property, string message = null)
+        {
+            var propertyInfo = GetMemberInfoFromExpression(property);
+            var value = property.Compile()(assertObject.Object);
+
+            if(default(P) == null)
+            {
+                if (value != null)
+                    Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] not to have the default value [{default(P)}]");
+
+                return assertObject;
+            }
+            
+            if (!value.Equals(default(P)))
+            {
+                Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] not to have the default value [{default(P)}]");
+            }
+            return assertObject;
+        }
+
+        public static AssertObject<T> HasNull<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> member, string message = null)
         {
             var memberInfo = GetMemberInfoFromExpression(member);
 
@@ -291,7 +316,7 @@ namespace FluentAssertion.MSTest
             return assertObject;
         }
 
-        public static AssertObject<T> HasNonNull<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> member, string message = null) where P : new()
+        public static AssertObject<T> HasNonNull<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> member, string message = null)
         {
             var memberInfo = GetMemberInfoFromExpression(member);
 

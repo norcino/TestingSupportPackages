@@ -17,14 +17,14 @@ namespace Builder
         /// <param name="hierarchyDepth">Depth lever to be reached when generating child entity objects</param>
         /// <param name="useRandomValues">False will leave members with their default value as not initialized</param>
         /// <returns>Entity generated</returns>
-        TE Build(int hierarchyDepth);
+        TE Build(int hierarchyDepth = 0, bool useRandomValues = true);
 
         /// <summary>
         /// Generates the entity with default values and customise it applying the provided action.
         /// To create the entity without generating random values but only using the customization action, it is possible
         /// to pass the boolean flag.
-        /// <param name="useRandomValues">False will leave members with their default value as not initialized</param>
         /// </summary>
+        /// <param name="useRandomValues">False will leave members with their default value as not initialized</param>
         /// <param name="entitySetupAction">Action used to customise the created entity</param>
         /// <returns>The created entity</returns>
         TE Build(Action<TE> entitySetupAction, bool useRandomValues = true);

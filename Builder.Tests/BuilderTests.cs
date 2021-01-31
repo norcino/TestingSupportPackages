@@ -1,6 +1,7 @@
 using FluentAssertion.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Linq;
 
 namespace Builder.Tests
 {
@@ -24,7 +25,7 @@ namespace Builder.Tests
                 .And()
                 .DoesNotContain(e => e.StringField == "Element#0").And().DoesNotContain(e => e.StringField == "Element#101")
                 .And()
-                .Contains(e => e.IntField == 1).And().Contains(e => e.IntField == 100).And()
+                .Contains(e => e.IntField == 1).And().Contains(e => e.IntField == 100)
                 .And()
                 .DoesNotContain(e => e.IntField == 0).And().DoesNotContain(e => e.IntField == 101)
 
@@ -48,7 +49,7 @@ namespace Builder.Tests
                 o.IntField = i;
                 o.IntProperty = 0;
                 o.StringProperty = null;
-            }, false);
+            });
 
             Assert.That.These(builtObjects)
                 .HaveCount(100)
@@ -393,6 +394,48 @@ namespace Builder.Tests
                         .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
                         .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
                         .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "Grandchild of an item of the collection has depth 3 and expected to be null");
+        }
+
+        [TestMethod]
+        public void Exclude_should_prevent_random_value_generation_for_the_excluded_members()
+        {
+            var entity = Builder<SutPoco>.New().Exclude(
+                p => p.IntField,
+                p => p.IntProperty
+                ).Build();
+
+            Assert.That.This(entity)
+                .IsNotNull().And()
+                .HasDefault(e => e.IntField).And()
+                .HasDefault(e => e.IntProperty).And()
+                .Has(e => e.LongField != 0).And()
+                .Has(e => e.LongProperty != 0);
+        }
+
+        [TestMethod]
+        public void Exclude_should_prevent_random_value_generation_for_the_excluded_members_on_hierarchy_objects()
+        {
+            var entity = Builder<SutPoco>.New().Exclude(
+                p => p.IntField,
+                p => p.IntProperty,
+                p => p.AnotherPocoProperty.IntField,
+                p => p.AnotherPocoProperty.AnotherPocoField.StringProperty
+                ).Build(2);
+
+
+            Assert.That.This(entity)
+                .IsNotNull().And()
+                // Make sure all properties excluded are using default values
+                .HasDefault(e => e.IntField).And()
+                .HasDefault(e => e.IntProperty).And()
+                .HasDefault(e => e.AnotherPocoProperty.IntField).And()
+                .HasDefault(e => e.AnotherPocoProperty.AnotherPocoField.StringProperty).And()
+                // Then just make sure we are still generating random values
+                .Has(e => e.LongField != 0).And()
+                .Has(e => e.LongProperty != 0).And()                
+                .Has(e => e.AnotherPocoProperty.LongProperty != 0).And()
+                .Has(e => e.AnotherPocoProperty.StringProperty != null).And()               
+                .Has(e => e.AnotherPocoProperty.AnotherPocoField.IntField != 0);            
         }
     }
 }

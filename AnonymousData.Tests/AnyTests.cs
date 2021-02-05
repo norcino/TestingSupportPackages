@@ -119,9 +119,11 @@ namespace AnonymousData.Tests
         [DataRow(101)]
         [DataRow(987)]
         [DataTestMethod]
-        public void String_returns_string_with_no_prefix_and_desired_suffix_length(int length)
+        public void String_returns_string_with_no_prefix_and_desired_length(int length)
         {
-            Assert.AreEqual(length, Any.String(length: length).Length);
+            var what = Any.String(length: length);
+            var whaaaat = what.Length;
+            Assert.AreEqual(length, whaaaat);
         }
 
         [TestMethod]

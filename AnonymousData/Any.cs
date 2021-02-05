@@ -116,13 +116,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             if (length < prefix.Length)
                 throw new ArgumentOutOfRangeException($"{nameof(length)} should be greater then the lenght of the given {nameof(prefix)}");
 
-            var stringBuilder = new StringBuilder(prefix);
-            while (stringBuilder.Length < length)
-            {
-                stringBuilder.Append(Char(utf));
+            var characters = new char[length];
+            for (int idx = 0; idx < length; idx++)
+            {                
+                characters[idx] = prefix.Length > idx ? prefix[idx] : Char(utf);
             }
             
-            return stringBuilder.ToString();
+            return new string(characters);
         }
 
         /// <summary>

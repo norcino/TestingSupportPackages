@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -114,17 +115,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             if (length < prefix.Length)
                 throw new ArgumentOutOfRangeException($"{nameof(length)} should be greater then the lenght of the given {nameof(prefix)}");
-            
-            const int asciiCharacterStart = 65; // ascii character code start
-            const int asciiCharacterEnd = 122; // ascii character code end
 
             var stringBuilder = new StringBuilder(prefix);
             while (stringBuilder.Length < length)
             {
-                if(utf)
-                    stringBuilder.Append(Char());
-                else
-                    stringBuilder.Append((char)(GetThreadRandom().Next(asciiCharacterStart, asciiCharacterEnd + 1) % 255));                
+                stringBuilder.Append(Char(utf));
             }
             
             return stringBuilder.ToString();
@@ -486,13 +481,32 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <code>
         /// var expectedResult = Any.Char();
         /// </code>
+        /// <param name="utf">Setting to true will generate UTF-16 string</param>
         /// <returns>Random character</returns>
-        public static char Char()
+        public static char Char(bool utf = false)
         {
-            var result = (char)GetThreadRandom().Next(0, UInt16.MaxValue);
+            char result = (char)65533;
 
+            if (!utf)
+            {
+                // ASCII charactes
+                result = (char)GetThreadRandom().Next(33, 126);
+            }
+            else
+            {
+                // Generate random character until it is valid UTF16
+                string resultAsString;
+                string transcodedResultString;
+                do
+                {
+                    result = (char)GetThreadRandom().Next(char.MinValue, char.MaxValue);
+                    resultAsString = result.ToString();
+                    transcodedResultString = Encoding.Unicode.GetString(Encoding.Unicode.GetBytes(resultAsString));
+                } while (resultAsString != transcodedResultString);
+            }
+            
             if (_doNotAcceptDefaultValues && default(char) == result)
-                return Char();
+                return Char(utf);
 
             return result;
         }

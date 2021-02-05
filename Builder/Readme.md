@@ -73,3 +73,7 @@ IEnumerable<T> myEntity = Builder<T>.New().BuildMany(10, (e,i) =>
                 e.StringProperty = $"My preferred value #{i}";
             }, false);
 ````
+
+### Use hierarchy parameter to generate also children Reference Types and IEnumerable
+
+### Use Exclusions to prevent properties from being populated with random data

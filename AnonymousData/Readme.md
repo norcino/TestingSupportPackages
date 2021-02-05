@@ -13,7 +13,7 @@ The following types are supported for generation:
 |---|:---:|---|
 |Bool||
 |Byte||
-|Char|||
+|Char||UTF|
 |DateTime|✔|Future|
 |Decimal|✔||
 |Double|✔||

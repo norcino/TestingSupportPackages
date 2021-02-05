@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace AnonymousData.Tests
 {
@@ -134,6 +135,14 @@ namespace AnonymousData.Tests
             }
 
             Assert.Fail("No UTF characters found int the result string");
+        }
+
+        [TestMethod]
+        public void UTFString_returns_only_valid_UTF18_characters()
+        {
+            var anonymousString = Any.String(length: 10000, utf: true);
+            var transcodedString = Encoding.Unicode.GetString(Encoding.Unicode.GetBytes(anonymousString));
+            Assert.AreEqual(anonymousString, transcodedString, "The random string should only contain UTF16 characters and be compatible with econding and decoding");
         }
         #endregion
 

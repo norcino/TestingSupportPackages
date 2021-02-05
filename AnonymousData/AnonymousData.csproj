@@ -11,8 +11,9 @@
 A known issue with developers struggling with test data setup, is that often the initial, explicit hard coded value or variables, can leave questions about being the real expected input/output, or just a value.</Description>
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/AnonymousData</PackageProjectUrl>
     <PackageTags>testing, muck, stub</PackageTags>
-    <PackageReleaseNotes>First release which supports the creation of random int, long, bool, DateTime, TimeSpan and more.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed UTF16 characters and strings generation</PackageReleaseNotes>
 	<Title>Anonymouse Data Generator</Title>
+	<Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

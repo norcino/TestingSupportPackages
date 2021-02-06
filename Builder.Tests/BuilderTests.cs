@@ -49,7 +49,7 @@ namespace Builder.Tests
                 o.IntField = i;
                 o.IntProperty = 0;
                 o.StringProperty = null;
-            });
+            }, false);
 
             Assert.That.These(builtObjects)
                 .HaveCount(100)

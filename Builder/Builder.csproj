@@ -10,21 +10,21 @@
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
-    <PackageReleaseNotes>First release which includes multiple building options for typed objects.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed issue affecting new Exclude feature.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\AnonymousData\AnonymousData.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="Logo128.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AnonymousData" Version="1.0.2" />
   </ItemGroup>
 
 </Project>

@@ -10,6 +10,8 @@ Builder allows to:
  - Create multiple instances of an object by specifying the type
  - Create an instance of an object by specifying the type and creation customization
  - Create multiple instances of an object by specifying the type and creation customization
+ - Create one or more objects without generating random values
+ - Create one or more objects specifying the list of properties to be excluded from them random value generation
 
 ## Usage
 
@@ -17,7 +19,6 @@ Builder allows to:
 Single entity creation with properties and fields populated with random data. Object and collections will remain null.
 ````
 T myEntity = Builder<T>.New().Build();
-
 ````
 
 ### Single entity creation with children object
@@ -25,7 +26,6 @@ Single entity creation with properties and fields populated with random data, th
 The below example will create a root T instance with all properties and fields generate and also down to 2 level of childer and granchildren objects and collections.
 ````
 T myEntity = Builder<T>.New().Build(2);
-
 ````
 
 ### Single entity creation with custom generation
@@ -36,7 +36,7 @@ This is useful to highlight which values are actually meaningful for the test an
 T myEntity = Builder<T>.New().Build(e => {
                 e.DateTimeProperty = DateTime.Now;
                 e.StringProperty = "My preferred value";
-                });
+            });
 ````
 optionally is possible to also ask the builder to only use the setup action, passing the value `false` for the optional parameter `useRandomValues`.
 This way all members will be left uninitialized, therefore they will have the default value.
@@ -75,5 +75,85 @@ IEnumerable<T> myEntity = Builder<T>.New().BuildMany(10, (e,i) =>
 ````
 
 ### Use hierarchy parameter to generate also children Reference Types and IEnumerable
+If the object created has members with reference types (objects) or enumerations, these by default will not be populate with random data.
+To change this behaviour is it possible to use the custom action to create a child object using another instance of a Builder, or it is possible to pass the _hierarchy_ parameter value, which represents the depth which the builder will reach to generate children objects.
+
+By default enumerations will be populated with 5 items.
+````
+T myEntity = Builder<T>.New().Build(2);
+````
+For example given the types below:
+````
+public class Car {
+    public int Id;
+    public int OwnerId;
+    public Person Owner;
+    public Company Make;
+    public string RegistrationNumber;
+}
+
+public class Person {
+    public int Id;
+    public string FirstName;
+    public string LastName;
+}
+
+public class Company {
+    public int Id;
+    public string Name;
+    public int FounderId;
+    public Person Founder;
+}
+````
+
+If a Builder is used to create a Car with depth 2, it will generate a Car, an Owner, a Make and the Founder of the Company.
+
+````
+var car = Builder<Car>.New().Build(2);
+````
+
+Where car will look like:
+
+|a|b|
+|-|-|
+|car.Id | Any Interger
+|car.OwnerId | Any Integer
+|car.Owner | An instance of Person
+|car.Owner.Id | Any int
+|car.Owner.FirstName | Any string
+|car.Owner.LastName | Any string
+|car.Make | An instance of Company
+|car.Make.Id | Any int
+|car.Make.Name | Any string
+|car.Make.FounderId | Any int
+|car.Make.Founder | An instance of Person
+|car.Make.Founder.Id | Any int
+|car.Make.Founder.FirstName | Any string
+|car.Make.Founder.LastName | Any string
+|car.RegistrationNumber | Any string
+
+To further improve the data consistency, for example satisfying the referential integrity, it is possible to use the construction action like shown below.
+````
+var car = Builder<Car>.New().Build(c =>
+{
+    c.OwnerId = c.Owner.Id;
+    c.Make.FounderId = c.Make.Founder.Id;
+}, 2);
+````
+Because the action to customize the generation is executed after the random generation, it is possible to make references consistent.
+
 
 ### Use Exclusions to prevent properties from being populated with random data
+Particularly handy when creating an object which will be saved to a database where the Identity will be generated automatically, it is possible to use the _Exclude_ method to provide one or more exclusions.
+````
+T myEntity = Builder<T>.New().Exclude(
+                e => e.Id,
+                e => e.ReferenceId
+                ).Build();
+
+Car myEntity = Builder<Car>.New().Exclude(
+                c => c.Id,
+                c => c.OwnerId,
+                c => c.Owner.Id
+                ).Build(1);
+````

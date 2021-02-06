@@ -72,12 +72,12 @@ namespace Builder
         }
 
         /// <inheritdoc cref="IBuilder{TE}.Build(Action{TE})"/>
-        public virtual TE Build(Action<TE> entitySetupAction, bool useRandomValues = true)
+        public virtual TE Build(Action<TE> entitySetupAction, int hierarchyDepth = 0, bool useRandomValues = true)
         {
             if (entitySetupAction == null)
                 throw new ArgumentNullException($"{nameof(entitySetupAction)}");
 
-            var entity = Build();
+            var entity = Build(hierarchyDepth, useRandomValues);
             entitySetupAction(entity);
             return entity;
         }
@@ -118,45 +118,50 @@ namespace Builder
         /// <returns>True if the member has been excluded</returns>
         private bool IsMemberInExludeList(string memberName)
         {
-            return Exclusions.Any(ex => !ex.Contains('.') && ex == memberName.ToLower());
+            return Exclusions?.Any(ex => !ex.Contains('.') && ex == memberName.ToLower()) ?? false;
         }
 
-
-        private static string GetPropertyName(MemberExpression memberExpression, string soFar = "")
+        /// <summary>
+        /// Get the fully qualified name of the property passed in as member expression
+        /// </summary>
+        /// <param name="memberExpression">Expression containing the property</param>
+        /// <param name="namePrefix">Pre defined prefix to appent to the property, also use by recursion to generate the name</param>
+        /// <returns>The fully qualified name of the member expression property</returns>
+        private static string GetPropertyName(MemberExpression memberExpression, string namePrefix = "")
         {
             var expession = memberExpression?.Expression;
-            if (expession == null) return soFar;
+            if (expession == null) return namePrefix;
 
             var me = (expession as MemberExpression);
             var propertyName = "";
             
             // First iteration always read property name
-            if(string.IsNullOrEmpty(soFar))
+            if(string.IsNullOrEmpty(namePrefix))
                 propertyName = (memberExpression.Member as MemberInfo)?.Name;
 
             // If member has name it means the iteration needs to recurse
             if (!string.IsNullOrEmpty(me?.Member?.Name))
-                soFar = GetPropertyName(me, $"{me?.Member?.Name}.{soFar}");
+                namePrefix = GetPropertyName(me, $"{me?.Member?.Name}.{namePrefix}");
 
             // If parent object was found add dot between obj and property
-            if (!string.IsNullOrEmpty(soFar) && !soFar.EndsWith(".")) soFar = $"{soFar}.";
+            if (!string.IsNullOrEmpty(namePrefix) && !namePrefix.EndsWith(".")) namePrefix = $"{namePrefix}.";
 
-            return $"{soFar}{propertyName}";
+            return $"{namePrefix}{propertyName}";
         }
         
         /// <summary>
-        /// 
+        /// Get random data for a given property to be set to the given entity
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="memberType"></param>
         /// <param name="propertyName"></param>
         /// <param name="hierarchyDepth"></param>
         /// <param name="exclusions"></param>
-        /// <returns></returns>
+        /// <returns>The entity with the property populated with random value</returns>
         internal virtual object GenerateAnonymousData(object entity, Type memberType, string propertyName, int hierarchyDepth, List<string> exclusions)
         {
             if (memberType == typeof(string))
-                return Any.String(propertyName);
+                return Any.String(propertyName, 15 + propertyName.Length);
 
             if (memberType == typeof(sbyte) || memberType == typeof(byte) || memberType == typeof(Byte) || memberType == typeof(SByte))
                 return Any.Byte();
@@ -214,12 +219,12 @@ namespace Builder
                 {
                     for (var i = 1; i <= NumberOfNestedEntitiesInCollections; i++)
                     {                        
-                        var childEntity = GenerateAnonymousDateForChildEntityObject(null, genericTypeArgument, propertyName, hierarchyDepth, exclusions.Where(e => e.Contains('.')).ToList());
+                        var childEntity = GenerateAnonymousDateForChildEntityObject(null, genericTypeArgument, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.'))?.ToList());
                         listOfChildEntities.Add(childEntity);                        
                     }
                     return listOfChildEntities;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument));
                 }
@@ -228,12 +233,21 @@ namespace Builder
             // Handle Reference types members if the hierarchy depth has been set
             if (hierarchyDepth > 0 && memberType.IsClass && !memberType.IsGenericType)
             {
-                return GenerateAnonymousDateForChildEntityObject(entity, memberType, propertyName, hierarchyDepth, exclusions.Where(e => e.Contains('.')).ToList());
+                return GenerateAnonymousDateForChildEntityObject(entity, memberType, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.'))?.ToList());
             }
 
             return null;
         }
 
+        /// <summary>
+        /// When hierarchy is set the children objects are also generate with random values
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="propertyType"></param>
+        /// <param name="propertyName"></param>
+        /// <param name="hierarchyDepth"></param>
+        /// <param name="exclusions"></param>
+        /// <returns></returns>
         internal object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth, List<string> exclusions)
         {
             try
@@ -241,11 +255,14 @@ namespace Builder
                 var genericBuilderType = typeof(Builder<>);
                 var builderType = genericBuilderType.MakeGenericType(propertyType);
                 var buildMethodInfo = builderType.GetMethod(nameof(this.Build), new[] { typeof(int), typeof(bool) });
-                var excludeFieldInfo = builderType.GetField(nameof(this.Exclusions), BindingFlags.Instance | BindingFlags.NonPublic);
-
                 var builderObject = Activator.CreateInstance(builderType);
-                excludeFieldInfo.SetValue(builderObject, GetExclusionsRemovingFirstLevel(exclusions));
-                
+
+                if (exclusions != null && exclusions.Count > 0)
+                {
+                    var excludeFieldInfo = builderType.GetField(nameof(this.Exclusions), BindingFlags.Instance | BindingFlags.NonPublic);
+                    excludeFieldInfo.SetValue(builderObject, GetExclusionsRemovingFirstLevel(exclusions));
+                }
+
                 var childEntity = buildMethodInfo.Invoke(builderObject, new object[] { hierarchyDepth - 1, true });
 
                 // ********** Prototype to try to ser reference keys using ID conventions
@@ -286,16 +303,25 @@ namespace Builder
                 //***************
                 return childEntity;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return null;
             }
         }
 
+        /// <summary>
+        /// Remove the first level of an exclusion, which represent the root object/type.
+        /// This method uses . delimiter to remove the first part and return a new list.
+        /// If an element of the list has no parent object, it means that was already a property name and will be removed.
+        /// </summary>
+        /// <param name="exclusions"></param>
+        /// <returns></returns>
         private List<string> GetExclusionsRemovingFirstLevel(List<string> exclusions)
         {
+            if (exclusions == null) return null;
+
             var result = new List<string>();
-            foreach(var exclusion in exclusions)
+            foreach (var exclusion in exclusions)
             {
                 var dotPosition = exclusion.IndexOf('.');
                 if (dotPosition < 0) continue;

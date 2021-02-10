@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
-    <PackageReleaseNotes>Fixed issue affecting new Exclude feature.</PackageReleaseNotes>
+    <PackageReleaseNotes>Default strings are now generated with aphanumeric characters but more the default behaviour can be changed</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AnonymousData" Version="1.0.2" />
+    <PackageReference Include="AnonymousData" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

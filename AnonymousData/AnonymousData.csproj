@@ -11,11 +11,11 @@
 A known issue with developers struggling with test data setup, is that often the initial, explicit hard coded value or variables, can leave questions about being the real expected input/output, or just a value.</Description>
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/AnonymousData</PackageProjectUrl>
     <PackageTags>testing, muck, stub</PackageTags>
-    <PackageReleaseNotes>Optimized string generation performance</PackageReleaseNotes>
+    <PackageReleaseNotes>Default string and characters are now alphanumeric and not ASCII, but this can be changed using a new CharSet enumeration</PackageReleaseNotes>
 	<Title>Anonymouse Data Generator</Title>
-	<Version>1.0.2</Version>
-	<AssemblyVersion>1.0.2.0</AssemblyVersion>
-	<FileVersion>1.0.2.0</FileVersion>
+	<Version>1.0.3</Version>
+	<AssemblyVersion>1.0.3.0</AssemblyVersion>
+	<FileVersion>1.0.3.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

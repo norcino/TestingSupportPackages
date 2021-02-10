@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AnonymousData;
+using System;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -16,6 +17,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public static class Any
     {
+        private static readonly char[] AphanumericChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
         private static int _seed = Environment.TickCount;
         private static readonly ThreadLocal<Random> RandomWrapper =
             new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref _seed)));
@@ -106,9 +108,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </code>
         /// <param name="length">Length of the random part of the string</param>
         /// <param name="prefix">Prefix of the generated string</param>
-        /// <param name="utf">Setting to true will generate UTF-16 string</param>
+        /// <param name="charSet">Character set to be used for the string generation</param>
         /// <returns>Randomly generated string</returns>
-        public static string String(string prefix = "", int length = 15, bool utf = false)
+        public static string String(string prefix = "", int length = 15, CharSet charSet = CharSet.Alphanumeric)
         {
             if (length < 1)
                 throw new ArgumentOutOfRangeException($"{nameof(length)} must be greater than zero");
@@ -119,7 +121,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             var characters = new char[length];
             for (int idx = 0; idx < length; idx++)
             {                
-                characters[idx] = prefix.Length > idx ? prefix[idx] : Char(utf);
+                characters[idx] = prefix.Length > idx ? prefix[idx] : Char(charSet);
             }
             
             return new string(characters);
@@ -446,8 +448,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             var maximumSeconds = 59;
             if (now.Year == year && now.Month == month && now.Day == day && now.Hour == hour && now.Minute == minute)
             {
-                if (future) minimumMinutes = now.Second;
-                if (!future) maximumMinutes = now.Second;
+                if (future) minimumSeconds = now.Second;
+                if (!future) maximumSeconds = now.Second;
             }
             var second = GetThreadRandom().Next(minimumSeconds, maximumSeconds);
 
@@ -481,15 +483,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <code>
         /// var expectedResult = Any.Char();
         /// </code>
-        /// <param name="utf">Setting to true will generate UTF-16 string</param>
+        /// <param name="charSet">Character set used for the character generation</param>
         /// <returns>Random character</returns>
-        public static char Char(bool utf = false)
+        public static char Char(CharSet charSet = CharSet.Alphanumeric)
         {
             char result = (char)65533;
 
-            if (!utf)
+            if (CharSet.Alphanumeric == charSet)
             {
-                // ASCII charactes
+                result = AphanumericChars[GetThreadRandom().Next(AphanumericChars.Length)];
+            }
+            else if (CharSet.ASCII == charSet)
+            {
                 result = (char)GetThreadRandom().Next(33, 126);
             }
             else
@@ -506,7 +511,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
             
             if (_doNotAcceptDefaultValues && default(char) == result)
-                return Char(utf);
+                return Char(charSet);
 
             return result;
         }

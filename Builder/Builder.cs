@@ -1,3 +1,4 @@
+using AnonymousData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
@@ -15,6 +16,8 @@ namespace Builder
     /// <inheritdoc cref="IBuilder{TE}"/>
     public class Builder<TE> : IBuilder<TE> where TE : class, new()
     {
+        public CharSet DefaultStringCharSet = CharSet.Alphanumeric;
+
         internal List<string> Exclusions;
         public static int NumberOfNestedEntitiesInCollections { get; set; } = 5;
 
@@ -161,7 +164,7 @@ namespace Builder
         internal virtual object GenerateAnonymousData(object entity, Type memberType, string propertyName, int hierarchyDepth, List<string> exclusions)
         {
             if (memberType == typeof(string))
-                return Any.String(propertyName, 15 + propertyName.Length);
+                return Any.String(propertyName, 15 + propertyName.Length, DefaultStringCharSet);
 
             if (memberType == typeof(sbyte) || memberType == typeof(byte) || memberType == typeof(Byte) || memberType == typeof(SByte))
                 return Any.Byte();
@@ -185,7 +188,7 @@ namespace Builder
                 return Any.Float();
 
             if (memberType == typeof(char) || memberType == typeof(Char))
-                return Any.Char();
+                return Any.Char(DefaultStringCharSet);
 
             if (memberType == typeof(DateTime))
                 return Any.DateTime();

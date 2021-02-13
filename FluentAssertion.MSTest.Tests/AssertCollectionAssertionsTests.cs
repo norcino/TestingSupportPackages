@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FluentAssertion.MSTest;
 using FluentAssertion.MSTest.Tests;
 using System.Collections;
+using AnonymousData;
 
 namespace MSTest.FluentAssertions.Tests
 {

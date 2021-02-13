@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using AnonymousData;
 
 namespace FluentAssertion.MSTest.Tests
 {

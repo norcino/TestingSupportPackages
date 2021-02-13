@@ -1,11 +1,9 @@
-﻿using AnonymousData;
-using System;
-using System.Globalization;
+﻿using System;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting
+namespace AnonymousData
 {
     /// <summary>
     /// Any (Anonymous Data) is a random data generator to use for unit testing

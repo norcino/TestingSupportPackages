@@ -226,7 +226,7 @@ namespace Builder
                     }
                     return listOfChildEntities;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument));
                 }
@@ -305,7 +305,7 @@ namespace Builder
                 //***************
                 return childEntity;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }

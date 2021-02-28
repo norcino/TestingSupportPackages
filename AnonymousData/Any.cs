@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -71,6 +73,17 @@ namespace AnonymousData
 
             var maxValueForLenght = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
             
+            if (minValue.HasValue)
+                return GetThreadRandom().Next(minValue.Value, maxValueForLenght);
+
+            if (maxValue.HasValue)
+            {
+                var minimum = int.MinValue;
+                if (onlyPositive) minimum = 0;
+                if (!allowZero) minimum = 1;
+                return GetThreadRandom().Next(minimum, maxValue.Value);
+            }
+
             if (onlyPositive)
                 return GetThreadRandom().Next(allowZero ? 0 : 1, maxValueForLenght);
 
@@ -530,6 +543,30 @@ namespace AnonymousData
         }
 
         /// <summary>
+        /// Gets an enumeration of objects from which one will be randomly selected
+        /// </summary>
+        /// <typeparam name="T">Type of objects to be seleted</typeparam>
+        /// <param name="options">List of options to select from</param>
+        /// <returns>A randomly selected option</returns>
+        public static T In<T>(IEnumerable<T> options)
+        {
+            if (options == null || !options.Any()) return default;
+            var index = Int(allowZero: true, maxValue: options.Count()-1);
+            return options.ElementAt(index);
+        }
+
+        /// <summary>
+        /// Gets a series of objects from which one will be randomly selected
+        /// </summary>
+        /// <typeparam name="T">Type of objects to be seleted</typeparam>
+        /// <param name="options">List of options to select from</param>
+        /// <returns>A randomly selected option</returns>
+        public static T Of<T>(params T[] options)
+        {
+            return In(options.AsEnumerable());
+        }
+
+        /// <summary>
         /// Generate an object of type T with random properties and fields
         /// </summary>
         /// <typeparam name="T">Type of the object to generate</typeparam>
@@ -551,6 +588,25 @@ namespace AnonymousData
                 fieldInfo.SetValue(e, GenerateAnonymousData(e, fieldInfo.FieldType, fieldInfo.Name));
             }
             return e;
+        }
+
+        /// <summary>
+        /// Generates a random Email
+        /// </summary>
+        /// <returns>Well formatted email</returns>
+        public static string Email()
+        {
+            return $"{String(length: 15)}@{String(length: 8)}.any";
+        }
+
+        /// <summary>
+        /// Generates a random Uri
+        /// </summary>
+        /// <param name="protocol">Desired protocol to be used, by default is http</param>
+        /// <returns>Rando Uri</returns>
+        public static Uri Uri(string protocol = "http")
+        {
+            return new System.Uri($"{protocol}://{String(length:8)}.any");
         }
 
         internal static object GenerateAnonymousData(object entity, Type propertyType, string propertyName)

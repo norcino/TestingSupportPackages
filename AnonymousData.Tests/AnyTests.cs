@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AnonymousData.Tests
@@ -42,6 +43,7 @@ namespace AnonymousData.Tests
             }
         }
 
+        #region In Enum
         [TestMethod]
         public void In_should_retun_random_enumeration_value()
         {
@@ -54,6 +56,55 @@ namespace AnonymousData.Tests
                     ForTesting.Yes == randomValue);
             }
         }
+        #endregion
+
+        #region In IEnumerable
+        [TestMethod]
+        public void In_should_retun_random_element_in_the_list_of_parameters()
+        {
+            var options = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+            var result = Any.In(options);
+            Assert.IsTrue(options.Contains(result));
+        }
+
+        [TestMethod]
+        public void In_should_retun_the_provided_option_if_only_one_available()
+        {
+            var options = new List<string> { "OnlyOne" };
+            var result = Any.In(options);
+            Assert.AreEqual(options.First(), result);
+        }
+
+        [TestMethod]
+        public void In_should_not_throw_if_nothing_is_provided()
+        {
+            Any.In((IEnumerable<string>)null);
+        }
+        #endregion
+
+        #region Of Params
+        [TestMethod]
+        public void Of_should_retun_random_element_in_the_list_of_parameters()
+        {
+            var options = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+            var result = Any.Of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
+            Assert.IsTrue(options.Contains(result));            
+        }
+
+        [TestMethod]
+        public void Of_should_retun_the_provided_option_if_only_one_available()
+        {
+            var result = Any.Of("OnlyOption");
+            Assert.AreEqual("OnlyOption", result);
+        }
+
+        [TestMethod]
+        public void Of_should_not_throw_if_nothing_is_provided()
+        {
+            var result = Any.Of<string>();
+        }
+
+        #endregion
 
         #region RangedInt
         [TestMethod]
@@ -145,6 +196,40 @@ namespace AnonymousData.Tests
             var anonymousString = Any.String(length: 10000, charSet: CharSet.UTF16);
             var transcodedString = Encoding.Unicode.GetString(Encoding.Unicode.GetBytes(anonymousString));
             Assert.AreEqual(anonymousString, transcodedString, "The random string should only contain UTF16 characters and be compatible with econding and decoding");
+        }
+        #endregion
+
+        #region Email
+        [TestMethod]
+        public void Email_should_return_a_valid_formatted_email()
+        {
+            var email = Any.Email();
+            try
+            {
+                var valid = new System.Net.Mail.MailAddress(email);
+            }
+            catch
+            {
+                Assert.Fail($"The email generated is not valid: '{email}'");
+            }
+        }
+        #endregion
+
+        #region Uri
+        [TestMethod]
+        public void Uri_should_return_an_http_url()
+        {
+            var url = Any.Uri().ToString();
+            Assert.IsTrue(url.StartsWith("http://"));
+            Assert.IsTrue(url.EndsWith(".any/"));
+        }
+
+        [TestMethod]
+        public void Uri_should_return_an_url_with_the_given_protocol_when_specified()
+        {
+            var url = Any.Uri("ftp").ToString();
+            Assert.IsTrue(url.StartsWith("ftp://"));
+            Assert.IsTrue(url.EndsWith(".any/"));
         }
         #endregion
 

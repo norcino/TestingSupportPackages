@@ -26,8 +26,33 @@ The following types are supported for generation:
 |Short||
 |String|✔|Prefix, UTF|
 |TimeSpan|✔||
+|Uri||Protocol|
 
 For all types it is possible to configure the exclusion of the default value of the given type.
+
+## Extra features
+
+### An element in a list
+Any supports the random selection of an option from a given list of options. These can be passed as an _IEnumberable_ or as a list of parameters.
+````
+// Possible results: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday ]
+var weekDays = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+var aWeekDay = Any.In(options);
+````
+
+### An element of a list of parameters
+Similar but alternative option is to provide a list of parameters as follows:
+````
+// Possible results: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday ]
+var aWeekDay = Any.Of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
+````
+
+### An email
+Extending the capability of _Any.String()_ it is possible to have a valid formatted email address.
+````
+// Possible results: any email address with the format {any_string}@{any_string}.any
+var email = Any.Email();
+````
 
 ## Usage
 
@@ -235,6 +260,18 @@ Get a random enumeration value
 ````
 // Possible results: Any of the values in MyEnum
 MyEnum anyValue = Any.In<MyEnum>();
+````
+
+### Uri
+Generates a random _Uri_ using as default protocol _http://_ and default TLD _.any_
+````
+// Possible results: Any URL in the form http://{any_string}.any
+var url = Any.Uri()
+````
+but is also possible to specify a custom protocol using:
+````
+// Possible results: Any URL in the form ftp://{any_string}.any
+var url = Any.Uri("ftp")
 ````
 
 ### Objects (With default parameterless constructor)

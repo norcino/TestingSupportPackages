@@ -609,6 +609,16 @@ namespace AnonymousData
             return new System.Uri($"{protocol}://{String(length:8)}.any");
         }
 
+        /// <summary>
+        /// Generates a random Url
+        /// </summary>
+        /// <param name="protocol">Desired protocol to be used, by default is http</param>
+        /// <returns>Rando Uri</returns>
+        public static string Url(string protocol = "http")
+        {
+            return Uri(protocol).ToString();
+        }
+
         internal static object GenerateAnonymousData(object entity, Type propertyType, string propertyName)
         {
             if (propertyType == typeof(string))

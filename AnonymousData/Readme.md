@@ -13,7 +13,7 @@ The following types are supported for generation:
 |---|:---:|---|
 |Bool||
 |Byte||
-|Char||UTF|
+|Char||CharSet|
 |DateTime|✔|Future|
 |Decimal|✔||
 |Double|✔||
@@ -24,9 +24,10 @@ The following types are supported for generation:
 |Object||
 |SByte||
 |Short||
-|String|✔|Prefix, UTF|
+|String|✔|Prefix, CharSet|
 |TimeSpan|✔||
 |Uri||Protocol|
+|Url||Protocol|
 
 For all types it is possible to configure the exclusion of the default value of the given type.
 
@@ -230,7 +231,7 @@ Generate a string of 15 characters
 var aString = Any.String();
 
 // Possible results: Any string with a lenght of 15 UTF-16 characters
-var aUTFString = Any.String(utf: true);
+var aUTFString = Any.String(charSet: CharSet.UTF16);
 ````
 Generate a string with the given lenght
 ````
@@ -242,6 +243,11 @@ Generate a string with the given lenght and prefix
 // Possible results: Any string of a lenght of 10 characters starting with "Name_"
 var aString = Any.String("Name_", 10);
 ````
+Strings can be generated using one the following __CharSet__:
+- ASCII
+- UTF16
+- Alphanumeric
+The default is Alphanumeric
 
 ### TimeSpan
 Generates a random TimeSpan of a default maximum value of 10 days
@@ -266,12 +272,24 @@ MyEnum anyValue = Any.In<MyEnum>();
 Generates a random _Uri_ using as default protocol _http://_ and default TLD _.any_
 ````
 // Possible results: Any URL in the form http://{any_string}.any
-var url = Any.Uri()
+Uri url = Any.Uri()
 ````
 but is also possible to specify a custom protocol using:
 ````
 // Possible results: Any URL in the form ftp://{any_string}.any
-var url = Any.Uri("ftp")
+Uri url = Any.Uri("ftp")
+````
+
+### Uri
+Generates a random _Url_ using as default protocol _http://_ and default TLD _.any_
+````
+// Possible results: Any URL in the form http://{any_string}.any
+string url = Any.Url()
+````
+but is also possible to specify a custom protocol using:
+````
+// Possible results: Any URL in the form ftp://{any_string}.any
+string url = Any.Url("ftp")
 ````
 
 ### Objects (With default parameterless constructor)

@@ -233,6 +233,24 @@ namespace AnonymousData.Tests
         }
         #endregion
 
+        #region Url
+        [TestMethod]
+        public void Url_should_return_an_http_url()
+        {
+            var url = Any.Uri().ToString();
+            Assert.IsTrue(url.StartsWith("http://"));
+            Assert.IsTrue(url.EndsWith(".any/"));
+        }
+
+        [TestMethod]
+        public void Url_should_return_an_url_with_the_given_protocol_when_specified()
+        {
+            var url = Any.Uri("ftp").ToString();
+            Assert.IsTrue(url.StartsWith("ftp://"));
+            Assert.IsTrue(url.EndsWith(".any/"));
+        }
+        #endregion
+
         #region TimeSpan
         [TestMethod]
         public void Timespan_invoked_passing_zero_throws_exception()

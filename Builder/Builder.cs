@@ -15,14 +15,30 @@ namespace Builder
     /// <inheritdoc cref="IBuilder{TE}"/>
     public class Builder<TE> : IBuilder<TE> where TE : class, new()
     {
-        public CharSet DefaultStringCharSet = CharSet.Alphanumeric;
-
-        internal List<string> Exclusions;
         public static int NumberOfNestedEntitiesInCollections { get; set; } = 5;
-
+        public static IBuilderExlusionMapping BuilderExclusionMapping;
+        public CharSet DefaultStringCharSet = CharSet.Alphanumeric;
+        internal Operation CurrentOperation = Operation.Default;
+        internal List<string> Exclusions;
+        
         public static Builder<TE> New()
         {
+            var assembly = Assembly.LoadFrom("BuilderConfiguration");
+
+            if (BuilderExclusionMapping == null)
+            {
+                var exclusionMappingType = assembly.GetTypes().FirstOrDefault(t => t.GetInterface(nameof(IBuilderExlusionMapping)) != null);
+                if (exclusionMappingType != null)
+                    BuilderExclusionMapping = (IBuilderExlusionMapping)Activator.CreateInstance(exclusionMappingType);
+            }
+
             return (Builder<TE>)Activator.CreateInstance(typeof(Builder<TE>));
+        }
+
+        public Builder<TE> For(Operation operation)
+        {
+            CurrentOperation = operation;
+            return this;
         }
 
         protected Builder<TE> Exclude(List<string> exclusions)
@@ -51,6 +67,11 @@ namespace Builder
         /// <inheritdoc cref="IBuilder{TE}.Build()"/>
         public virtual TE Build(int hierarchyDepth = 0, bool useRandomValues = true)
         {            
+            if(this.Exclusions == null && BuilderExclusionMapping != null && BuilderExclusionMapping.GetExclusionsFor(CurrentOperation, typeof(TE)).Any())
+            {
+                this.Exclusions = BuilderExclusionMapping.GetExclusionsFor(CurrentOperation, typeof(TE)).ToList();
+            }
+
             var e = (TE)Activator.CreateInstance(typeof(TE));
 
             if (!useRandomValues) return e;
@@ -120,7 +141,7 @@ namespace Builder
         /// <returns>True if the member has been excluded</returns>
         private bool IsMemberInExludeList(string memberName)
         {
-            return Exclusions?.Any(ex => !ex.Contains('.') && ex == memberName.ToLower()) ?? false;
+            return Exclusions?.Any(ex => !ex.Contains('.') && string.Equals(ex, memberName, StringComparison.InvariantCultureIgnoreCase)) ?? false;
         }
 
         /// <summary>

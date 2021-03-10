@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AnonymousData;
 using System;
 using System.Linq;
+using BuilderExclusionMappings;
 
 namespace Builder.Tests
 {
@@ -437,6 +438,77 @@ namespace Builder.Tests
                 .Has(e => e.AnotherPocoProperty.LongProperty != 0).And()
                 .Has(e => e.AnotherPocoProperty.StringProperty != null).And()               
                 .Has(e => e.AnotherPocoProperty.AnotherPocoField.IntField != 0);            
+        }
+
+        [TestMethod]
+        public void Builder_should_use_exclusion_mappings_from_Assembly_BuilderConfiguration_and_use_generic_operation()
+        {
+            // See MyCustomExclusions class
+            var generatedType1 = Builder<Type1>.New().Build();
+
+            Assert.That.This(generatedType1)
+                .HasDefault(t => t.ID)
+                .HasDefault(t => t.CreatedDateTimeUTC)
+                .HasDefault(t => t.ModifiedDateTimeUTC)
+                .HasNonDefault(t => t.Name)
+                .HasNonDefault(t => t.Surname);
+
+            var generatedType2 = Builder<Type2>.New().Build(1);
+
+            Assert.That.This(generatedType2)
+                .HasNonDefault(t => t.ID)
+                .HasNonDefault(t => t.ChildObject)
+                .HasNonDefault(t => t.Name)
+                .HasNonDefault(t => t.Surname);
+        }
+
+        [TestMethod]
+        public void Builder_should_use_exclusion_mappings_from_Assembly_BuilderConfiguration()
+        {
+            // See MyCustomExclusions class
+            var generatedType1 = Builder<Type1>.New().For(Operation.Create).Build();
+
+            Assert.That.This(generatedType1)
+                .HasDefault(t => t.ID)
+                .HasNonDefault(t => t.CreatedDateTimeUTC)
+                .HasDefault(t => t.ModifiedDateTimeUTC)
+                .HasNonDefault(t => t.Name)
+                .HasNonDefault(t => t.Surname);
+
+            var generatedType2 = Builder<Type2>.New().For(Operation.Create).Build(1);
+
+            Assert.That.This(generatedType2)
+                .HasDefault(t => t.ID)
+                .HasDefault(t => t.ChildObject)
+                .HasNonDefault(t => t.Name)
+                .HasNonDefault(t => t.Surname);
+        }
+
+        [TestMethod]
+        public void Builder_should_not_use_exclusion_mappings_from_Assembly_BuilderConfiguration_when_explicit_exclude_is_used()
+        {
+            // See MyCustomExclusions class
+            var generatedType1 = Builder<Type1>.New().Exclude(t => t.ID).Build();
+
+            Assert.That.This(generatedType1)
+                .HasDefault(t => t.ID)
+                .HasNonDefault(t => t.CreatedDateTimeUTC)
+                .HasNonDefault(t => t.ModifiedDateTimeUTC)
+                .HasNonDefault(t => t.Name)
+                .HasNonDefault(t => t.Surname);
+        }
+
+        [TestMethod]
+        public void Builder_should_use_exclusion_mappings_from_Assembly_BuilderConfiguration_ignoring_child_objects()
+        {
+            // See MyCustomExclusions class
+            var generatedType1 = Builder<Type2>.New().For(Operation.Create).Build(1);
+
+            Assert.That.This(generatedType1)
+                .HasDefault(t => t.ID)
+                .HasDefault(t => t.ChildObject)
+                .HasNonDefault(t => t.Name)
+                .HasNonDefault(t => t.Surname);
         }
     }
 }

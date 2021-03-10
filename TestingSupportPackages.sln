@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Builder.Tests", "Builder.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluentAssertion.MSTest.Tests", "FluentAssertion.MSTest.Tests\FluentAssertion.MSTest.Tests.csproj", "{C052616F-69C0-4B0C-B08C-636C989AF240}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentAssertion.MSTest", "FluentAssertion.MSTest\FluentAssertion.MSTest.csproj", "{F1B03012-EEF0-4F13-B5E7-67B19649C816}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluentAssertion.MSTest", "FluentAssertion.MSTest\FluentAssertion.MSTest.csproj", "{F1B03012-EEF0-4F13-B5E7-67B19649C816}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuilderConfiguration", "BuilderConfiguration\BuilderConfiguration.csproj", "{9B966186-B609-4D12-A1FF-A42EB33BCD5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +73,14 @@ Global
 		{F1B03012-EEF0-4F13-B5E7-67B19649C816}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F1B03012-EEF0-4F13-B5E7-67B19649C816}.Release|x86.ActiveCfg = Release|Any CPU
 		{F1B03012-EEF0-4F13-B5E7-67B19649C816}.Release|x86.Build.0 = Release|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Debug|x86.Build.0 = Debug|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Release|x86.ActiveCfg = Release|Any CPU
+		{9B966186-B609-4D12-A1FF-A42EB33BCD5D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

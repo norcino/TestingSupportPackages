@@ -214,6 +214,30 @@ namespace Builder.Tests
         }
 
         [TestMethod]
+        public void Build_should_set_null_enumerations_by_default_when_there_is_no_hierarchy()
+        {
+            var builtObjects = Builder<SutPoco>.New().Build();
+
+            Assert.That.This(builtObjects)
+                .HasNull(o => o.MorePocosProperty).And()
+                .HasNull(o => o.MorePocosField);
+        }
+
+        [TestMethod]
+        public void Build_should_set_Empty_enumerations_when_so_configured_with_no_hierarchy()
+        {
+            Builder.InitializeEmptyCollectionsInsteadOfNull = true;
+
+            var builtObjects = Builder<SutPoco>.New().Build();
+
+            Assert.That.This(builtObjects)
+                .HasEmpty(o => o.MorePocosProperty).And()
+                .HasEmpty(o => o.MorePocosField);
+
+            Builder.InitializeEmptyCollectionsInsteadOfNull = false;
+        }
+
+        [TestMethod]
         public void Build_should_return_the_object_with_all_properties_fields_and_first_level_children_objects_populated_when_specified()
         {
             Any.ExcludeDefaultValues(true);

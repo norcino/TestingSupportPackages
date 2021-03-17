@@ -10,13 +10,12 @@
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
-    <PackageReleaseNotes>Added support for Uri and MailAddress generation.
-Added detection for "Url", "Email" and "MailAddress" in the property names with value string, and assign the corresponding well formatted text</PackageReleaseNotes>
+    <PackageReleaseNotes>Added static configuration to control the creation of empty collections instead of null</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.9</Version>
-    <AssemblyVersion>1.0.9.0</AssemblyVersion>
-    <FileVersion>1.0.9.0</FileVersion>
+    <Version>1.0.10</Version>
+    <AssemblyVersion>1.0.10.0</AssemblyVersion>
+    <FileVersion>1.0.10.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

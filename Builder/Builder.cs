@@ -9,14 +9,15 @@ using System.Reflection;
 
 namespace Builder
 {
-    // TODO Handled Immutable Objects
-    // Maybe assume Builder is only used to create DTOs and Entities so ref objects are other DTOs or Entities?
-    // Add BindingFlags.NonPublic when getting properties
-
-    /// <inheritdoc cref="IBuilder{TE}"/>
-    public class Builder<TE> : IBuilder<TE> where TE : class, new()
+    public abstract class Builder
     {
         public static int NumberOfNestedEntitiesInCollections { get; set; } = 5;
+        public static bool InitializeEmptyCollectionsInsteadOfNull { get; set; } = false;
+    }
+
+    /// <inheritdoc cref="IBuilder{TE}"/>
+    public class Builder<TE> : Builder, IBuilder<TE> where TE : class, new()
+    {
         public static IBuilderExlusionMapping BuilderExclusionMapping;
         public CharSet DefaultStringCharSet = CharSet.Alphanumeric;
         internal Operation CurrentOperation = Operation.Default;
@@ -257,13 +258,23 @@ namespace Builder
             }
 
             // Handle IEnumerable members if the hierarchy depth has been set
-            if (hierarchyDepth > 0 && memberType.IsGenericType && typeof(IEnumerable).IsAssignableFrom(memberType))
+            if (memberType.IsGenericType && typeof(IEnumerable).IsAssignableFrom(memberType))
             {
                 var genericTypeArgument = memberType.GenericTypeArguments.FirstOrDefault();                
                 if (!genericTypeArgument.IsClass || genericTypeArgument.IsGenericType)
                 {
-                    return null;
+                    return null;                
                 }
+
+                // If hierarchy does not need to be populated return null or empty list according to configuration
+                if(hierarchyDepth <= 0)
+                {
+                    if (InitializeEmptyCollectionsInsteadOfNull)
+                        return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument));
+                    else
+                        return null;
+                }                    
+
                 var listOfChildEntities = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument));
 
                 try

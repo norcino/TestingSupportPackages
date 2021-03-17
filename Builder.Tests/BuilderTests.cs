@@ -36,6 +36,7 @@ namespace Builder.Tests
                     .HasNonDefault(i => i.TimeSpanProperty)
                     .HasNonDefault(i => i.LongField)
                     .HasNonDefault(i => i.DateTimeProperty)
+                    .HasNonDefault(i => i.GuidProperty)
                     .HasProperty(i => i.StringField).WhichValueStartsWith("Element#").And()
                     .HasProperty(i => i.StringProperty).WithValue(null).And()                    
                     .HasProperty(i => i.IntProperty).WithValue(0);
@@ -207,7 +208,9 @@ namespace Builder.Tests
                 .HasNonDefault(o => o.TimeSpanField).And()
                 .HasNonDefault(o => o.TimeSpanProperty).And()                
                 .HasNonDefault(o => o.EnumField).And()
-                .HasNonDefault(o => o.EnumProperty);
+                .HasNonDefault(o => o.EnumProperty).And()
+                .HasNonDefault(o => o.EmailProperty).And()
+                .HasNonDefault(o => o.UriProperty);
         }
 
         [TestMethod]

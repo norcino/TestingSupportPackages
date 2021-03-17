@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Mail;
 using System.Reflection;
 
 namespace Builder
@@ -19,18 +20,23 @@ namespace Builder
         public static IBuilderExlusionMapping BuilderExclusionMapping;
         public CharSet DefaultStringCharSet = CharSet.Alphanumeric;
         internal Operation CurrentOperation = Operation.Default;
-        internal List<string> Exclusions;
+        internal IEnumerable<string> Exclusions;
         
         public static Builder<TE> New()
         {
-            var assembly = Assembly.LoadFrom("BuilderConfiguration");
-
-            if (BuilderExclusionMapping == null)
+            try
             {
-                var exclusionMappingType = assembly.GetTypes().FirstOrDefault(t => t.GetInterface(nameof(IBuilderExlusionMapping)) != null);
-                if (exclusionMappingType != null)
-                    BuilderExclusionMapping = (IBuilderExlusionMapping)Activator.CreateInstance(exclusionMappingType);
+                // Try to load custom configurations
+                var assembly = Assembly.LoadFrom("BuilderConfiguration");
+
+                if (BuilderExclusionMapping == null)
+                {
+                    var exclusionMappingType = assembly.GetTypes().FirstOrDefault(t => t.GetInterface(nameof(IBuilderExlusionMapping)) != null);
+                    if (exclusionMappingType != null)
+                        BuilderExclusionMapping = (IBuilderExlusionMapping)Activator.CreateInstance(exclusionMappingType);
+                }
             }
+            catch { }
 
             return (Builder<TE>)Activator.CreateInstance(typeof(Builder<TE>));
         }
@@ -69,7 +75,7 @@ namespace Builder
         {            
             if(this.Exclusions == null && BuilderExclusionMapping != null && BuilderExclusionMapping.GetExclusionsFor(CurrentOperation, typeof(TE)).Any())
             {
-                this.Exclusions = BuilderExclusionMapping.GetExclusionsFor(CurrentOperation, typeof(TE)).ToList();
+                this.Exclusions = BuilderExclusionMapping.GetExclusionsFor(CurrentOperation, typeof(TE));
             }
 
             var e = (TE)Activator.CreateInstance(typeof(TE));
@@ -181,10 +187,23 @@ namespace Builder
         /// <param name="hierarchyDepth"></param>
         /// <param name="exclusions"></param>
         /// <returns>The entity with the property populated with random value</returns>
-        internal virtual object GenerateAnonymousData(object entity, Type memberType, string propertyName, int hierarchyDepth, List<string> exclusions)
+        internal virtual object GenerateAnonymousData(object entity, Type memberType, string propertyName, int hierarchyDepth, IEnumerable<string> exclusions)
         {
             if (memberType == typeof(string))
+            {
+                var propertyNameLowered = propertyName.ToLower();
+                if (propertyName.Contains("email") || propertyName.Contains("mailaddress"))
+                {
+                    return $"{propertyName}_{Any.Email()}";
+                }
+                
+                if (propertyName.Contains("url") || propertyName.Contains("website"))
+                {
+                    return $"{Any.Url()}";
+                }
+
                 return Any.String(propertyName, 15 + propertyName.Length, DefaultStringCharSet);
+            }                
 
             if (memberType == typeof(sbyte) || memberType == typeof(byte) || memberType == typeof(Byte) || memberType == typeof(SByte))
                 return Any.Byte();
@@ -215,7 +234,16 @@ namespace Builder
 
             if (memberType == typeof(TimeSpan))
                 return Any.TimeSpan();
-            
+
+            if (memberType == typeof(Guid))
+                return Any.Guid();
+
+            if (memberType == typeof(Uri))
+                return Any.Uri();
+
+            if (memberType == typeof(MailAddress))
+                return new MailAddress(Any.Email());
+
             if (memberType?.BaseType == typeof(Enum))
             {
                 var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(memberType).Length - 1);
@@ -242,7 +270,7 @@ namespace Builder
                 {
                     for (var i = 1; i <= NumberOfNestedEntitiesInCollections; i++)
                     {                        
-                        var childEntity = GenerateAnonymousDateForChildEntityObject(null, genericTypeArgument, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.'))?.ToList());
+                        var childEntity = GenerateAnonymousDateForChildEntityObject(null, genericTypeArgument, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.')));
                         listOfChildEntities.Add(childEntity);                        
                     }
                     return listOfChildEntities;
@@ -256,7 +284,7 @@ namespace Builder
             // Handle Reference types members if the hierarchy depth has been set
             if (hierarchyDepth > 0 && memberType.IsClass && !memberType.IsGenericType)
             {
-                return GenerateAnonymousDateForChildEntityObject(entity, memberType, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.'))?.ToList());
+                return GenerateAnonymousDateForChildEntityObject(entity, memberType, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.')));
             }
 
             return null;
@@ -271,7 +299,7 @@ namespace Builder
         /// <param name="hierarchyDepth"></param>
         /// <param name="exclusions"></param>
         /// <returns></returns>
-        internal object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth, List<string> exclusions)
+        internal object GenerateAnonymousDateForChildEntityObject(object entity, Type propertyType, string propertyName, int hierarchyDepth, IEnumerable<string> exclusions)
         {
             try
             {
@@ -280,7 +308,7 @@ namespace Builder
                 var buildMethodInfo = builderType.GetMethod(nameof(this.Build), new[] { typeof(int), typeof(bool) });
                 var builderObject = Activator.CreateInstance(builderType);
 
-                if (exclusions != null && exclusions.Count > 0)
+                if (exclusions != null && exclusions.Count() > 0)
                 {
                     var excludeFieldInfo = builderType.GetField(nameof(this.Exclusions), BindingFlags.Instance | BindingFlags.NonPublic);
                     excludeFieldInfo.SetValue(builderObject, GetExclusionsRemovingFirstLevel(exclusions));
@@ -339,7 +367,7 @@ namespace Builder
         /// </summary>
         /// <param name="exclusions"></param>
         /// <returns></returns>
-        private List<string> GetExclusionsRemovingFirstLevel(List<string> exclusions)
+        private List<string> GetExclusionsRemovingFirstLevel(IEnumerable<string> exclusions)
         {
             if (exclusions == null) return null;
 

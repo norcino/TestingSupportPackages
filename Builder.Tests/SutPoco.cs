@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Net.Mail;
 
 namespace Builder.Tests
 {
@@ -9,8 +11,12 @@ namespace Builder.Tests
         public SutPoco AnotherPocoField;
         public List<SutPoco> MorePocosField;
         public bool BoolField;
+
+        [Key]
         public int IntField;
         public long LongField;
+
+        [MaxLength(100)]
         public string StringField;
         public decimal DecimalField;
         public double DoubleField;
@@ -33,6 +39,12 @@ namespace Builder.Tests
         public DateTime DateTimeProperty { get; set; }
         public TimeSpan TimeSpanProperty { get; set; }
         public SutEnum EnumProperty { get; set; }
+
+        public Guid GuidProperty { get; set; }
+
+        public MailAddress EmailProperty { get; set; }
+
+        public Uri UriProperty { get; set; }
     }
 #pragma warning restore 0649
 }

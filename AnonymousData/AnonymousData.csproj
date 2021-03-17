@@ -11,11 +11,11 @@
 A known issue with developers struggling with test data setup, is that often the initial, explicit hard coded value or variables, can leave questions about being the real expected input/output, or just a value.</Description>
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/AnonymousData</PackageProjectUrl>
     <PackageTags>testing, muck, stub</PackageTags>
-    <PackageReleaseNotes>Added generation for Url as string, updated readme</PackageReleaseNotes>
+    <PackageReleaseNotes>Added Guid generation (Corrected Typo)</PackageReleaseNotes>
 	<Title>Anonymouse Data Generator</Title>
-	<Version>1.0.6</Version>
-	<AssemblyVersion>1.0.6.0</AssemblyVersion>
-	<FileVersion>1.0.6.0</FileVersion>
+	<Version>1.0.8</Version>
+	<AssemblyVersion>1.0.8.0</AssemblyVersion>
+	<FileVersion>1.0.8.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

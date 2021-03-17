@@ -619,6 +619,15 @@ namespace AnonymousData
             return Uri(protocol).ToString();
         }
 
+        /// <summary>
+        /// Generates a new Guid
+        /// </summary>
+        /// <returns></returns>
+        public static Guid Guid()
+        {
+            return System.Guid.NewGuid();
+        }
+
         internal static object GenerateAnonymousData(object entity, Type propertyType, string propertyName)
         {
             if (propertyType == typeof(string))

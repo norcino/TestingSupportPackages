@@ -19,6 +19,7 @@ The following types are supported for generation:
 |Double|✔||
 |Enum|||
 |Float|✔||
+|Guid|
 |Int|✔|Allow Zero, Positive, Range|
 |Long||Positive|
 |Object||

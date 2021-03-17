@@ -10,11 +10,13 @@
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
-    <PackageReleaseNotes>Added Operation support and Exclusions Mapping configuration using assembly BuilderConfiguration</PackageReleaseNotes>
+    <PackageReleaseNotes>Added support for Uri and MailAddress generation.
+Added detection for "Url", "Email" and "MailAddress" in the property names with value string, and assign the corresponding well formatted text</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.5</Version>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
+    <Version>1.0.9</Version>
+    <AssemblyVersion>1.0.9.0</AssemblyVersion>
+    <FileVersion>1.0.9.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AnonymousData" Version="1.0.6" />
+    <PackageReference Include="AnonymousData" Version="1.0.8" />
   </ItemGroup>
 
 </Project>

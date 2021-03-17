@@ -333,8 +333,20 @@ namespace FluentAssertion.MSTest
             {
                 return assertObject;
             }
-            Assert.Fail(message ?? $"Expected member '{memberInfo.Name}' to not be empty, but it was");
 
+            Assert.Fail(message ?? $"Expected member '{memberInfo.Name}' to not be empty, but it was");
+            return assertObject;
+        }
+
+        public static AssertObject<T> HasEmpty<T, P>(this AssertObject<T> assertObject, Expression<Func<T, P>> member, string message = null) where P : IEnumerable
+        {
+            var memberInfo = GetMemberInfoFromExpression(member);
+            var enumerable = (member.Compile()(assertObject.Object) as IEnumerable);
+
+            foreach (var e in enumerable)
+            {
+                Assert.Fail(message ?? $"Expected member '{memberInfo.Name}' to be empty, but it wasn't");
+            }
             return assertObject;
         }
 

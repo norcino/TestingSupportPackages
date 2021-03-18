@@ -296,14 +296,14 @@ namespace FluentAssertion.MSTest
             if(default(P) == null)
             {
                 if (value != null)
-                    Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] not to have the default value [{default(P)}]");
+                    Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] to have the default value [{default(P)}]");
 
                 return assertObject;
             }
             
             if (!value.Equals(default(P)))
             {
-                Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] not to have the default value [{default(P)}]");
+                Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] to have the default value [{default(P)}]");
             }
             return assertObject;
         }

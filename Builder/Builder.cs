@@ -2,6 +2,7 @@ using AnonymousData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Mail;
@@ -28,7 +29,8 @@ namespace Builder
             try
             {
                 // Try to load custom configurations
-                var assembly = Assembly.LoadFrom("BuilderConfiguration");
+                string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var assembly = Assembly.LoadFrom(Path.Combine(path, "BuilderConfiguration.dll"));
 
                 if (BuilderExclusionMapping == null)
                 {

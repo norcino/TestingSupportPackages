@@ -17,7 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BuilderConfiguration\BuilderConfiguration.csproj" />
+    <ProjectReference Include="..\BuilderConfiguration\BuilderConfiguration.csproj">
+      <Private>true</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Builder\Builder.csproj" />
     <ProjectReference Include="..\FluentAssertion.MSTest\FluentAssertion.MSTest.csproj" />
   </ItemGroup>

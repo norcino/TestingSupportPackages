@@ -10,12 +10,13 @@
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
-    <PackageReleaseNotes>Added static configuration to control the creation of empty collections instead of null</PackageReleaseNotes>
+    <PackageReleaseNotes>All collections are now generated empty, previously they were left null.
+Using the static Builder.InitializeNullCollectionsInsteadOfEmpty, this behaviour can be changed.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.10</Version>
-    <AssemblyVersion>1.0.10.0</AssemblyVersion>
-    <FileVersion>1.0.10.0</FileVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

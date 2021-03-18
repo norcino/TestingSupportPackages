@@ -13,7 +13,7 @@ namespace Builder
     public abstract class Builder
     {
         public static int NumberOfNestedEntitiesInCollections { get; set; } = 5;
-        public static bool InitializeEmptyCollectionsInsteadOfNull { get; set; } = false;
+        public static bool InitializeNullCollectionsInsteadOfEmpty { get; set; } = false;
     }
 
     /// <inheritdoc cref="IBuilder{TE}"/>
@@ -271,10 +271,10 @@ namespace Builder
                 // If hierarchy does not need to be populated return null or empty list according to configuration
                 if(hierarchyDepth <= 0)
                 {
-                    if (InitializeEmptyCollectionsInsteadOfNull)
-                        return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument));
-                    else
+                    if (InitializeNullCollectionsInsteadOfEmpty)
                         return null;
+                    else
+                        return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument)); 
                 }                    
 
                 var listOfChildEntities = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(genericTypeArgument));

@@ -85,8 +85,8 @@ namespace Builder.Tests
                     .IsOfType(typeof(SutPoco))
                     .HasNull(i => i.AnotherPocoField)
                     .HasNull(i => i.AnotherPocoProperty)
-                    .HasNull(i => i.MorePocosField)
-                    .HasNull(i => i.MorePocosProperty)
+                    .HasEmpty(i => i.MorePocosField)
+                    .HasEmpty(i => i.MorePocosProperty)
                     .HasNonDefault(i => i.CharField)
                     .HasNonDefault(o => o.CharProperty);
         }
@@ -187,8 +187,8 @@ namespace Builder.Tests
                 .IsNotNull().And()
                 .HasNull(o => o.AnotherPocoField).And()
                 .HasNull(o => o.AnotherPocoProperty).And()
-                .HasNull(o => o.MorePocosField).And()
-                .HasNull(o => o.MorePocosProperty).And()
+                .HasEmpty(o => o.MorePocosField).And()
+                .HasEmpty(o => o.MorePocosProperty).And()
                 .HasNonDefault(o => o.CharField).And()
                 .HasNonDefault(o => o.CharProperty).And()
                 .HasNonDefault(o => o.DateTimeField).And()
@@ -214,27 +214,27 @@ namespace Builder.Tests
         }
 
         [TestMethod]
-        public void Build_should_set_null_enumerations_by_default_when_there_is_no_hierarchy()
+        public void Build_should_set_Empty_enumerations_by_default_when_there_is_no_hierarchy()
         {
-            var builtObjects = Builder<SutPoco>.New().Build();
-
-            Assert.That.This(builtObjects)
-                .HasNull(o => o.MorePocosProperty).And()
-                .HasNull(o => o.MorePocosField);
-        }
-
-        [TestMethod]
-        public void Build_should_set_Empty_enumerations_when_so_configured_with_no_hierarchy()
-        {
-            Builder.InitializeEmptyCollectionsInsteadOfNull = true;
-
             var builtObjects = Builder<SutPoco>.New().Build();
 
             Assert.That.This(builtObjects)
                 .HasEmpty(o => o.MorePocosProperty).And()
                 .HasEmpty(o => o.MorePocosField);
+        }
 
-            Builder.InitializeEmptyCollectionsInsteadOfNull = false;
+        [TestMethod]
+        public void Build_should_set_Null_enumerations_when_so_configured_with_no_hierarchy()
+        {
+            Builder.InitializeNullCollectionsInsteadOfEmpty = true;
+
+            var builtObjects = Builder<SutPoco>.New().Build();
+
+            Assert.That.This(builtObjects)
+                .HasNull(o => o.MorePocosProperty).And()
+                .HasNull(o => o.MorePocosField);
+
+            Builder.InitializeNullCollectionsInsteadOfEmpty = false;
         }
 
         [TestMethod]
@@ -337,8 +337,8 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoProperty, "Expected child of a child to be null as depth is 1").And()
                     .HasNull(o => o.AnotherPocoField, "Expected child of a child to be null as depth is 1").And()
-                    .HasNull(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
-                    .HasNull(o => o.MorePocosProperty, "Expected child of a child to be null as depth is 1");
+                    .HasEmpty(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
+                    .HasEmpty(o => o.MorePocosProperty, "Expected child of a child to be null as depth is 1");
 
             Assert.That.These(builtObject.MorePocosProperty)
                 .HaveCount(Builder<SutPoco>.NumberOfNestedEntitiesInCollections)
@@ -365,8 +365,8 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoProperty, "Expected child of a child to be null as depth is 1").And()
                     .HasNull(o => o.AnotherPocoField, "Expected child of a child to be null as depth is 1").And()
-                    .HasNull(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
-                    .HasNull(o => o.MorePocosProperty, "Expected child of a child to be null as depth is 1");
+                    .HasEmpty(o => o.MorePocosField, "Expected child of a child to be null as depth is 1").And()
+                    .HasEmpty(o => o.MorePocosProperty, "Expected child of a child to be null as depth is 1");
         }
 
         [TestMethod]

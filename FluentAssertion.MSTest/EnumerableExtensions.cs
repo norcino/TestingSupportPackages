@@ -303,6 +303,21 @@ namespace FluentAssertion.MSTest
             return assertEachItem;
         }
 
+        public static AssertEachItem<T> HasEmpty<T, P>(this AssertEachItem<T> assertEachItem, Expression<Func<T, P>> property, string message = null)
+        {
+            var propertyInfo = GetMemberInfoFromExpression(property);
+
+            foreach (var collectionItem in assertEachItem.RootCollection.Collection)
+            {
+                var enumerable = (property.Compile()(collectionItem) as IEnumerable);
+                foreach (var e in enumerable)
+                {
+                    Assert.Fail(message ?? $"Expected member '{propertyInfo.Name}' to be empty, but it wasn't");
+                }
+            }
+            return assertEachItem;
+        }
+
         public static AssertEachItem<T> HasNonNull<T, P>(this AssertEachItem<T> assertEachItem, Expression<Func<T, P>> property, string message = null)
         {
             var propertyInfo = GetMemberInfoFromExpression(property);

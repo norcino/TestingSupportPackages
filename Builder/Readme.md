@@ -166,15 +166,15 @@ Builder.DefaultStringCharSet = CharSet.Alphanumeric;
 
 ## Builder static configuration using properties
 ### NumberOfNestedEntitiesInCollections
-__NumberOfNestedEntitiesInCollections__ is the default number of entities created for each enumeration populated when the hieratchy is set to a value greater than 1;
+_NumberOfNestedEntitiesInCollections_ is the default number of entities created for each enumeration populated when the hieratchy is set to a value greater than 1;
 
-### InitializeEmptyCollectionsInsteadOfNull
-__InitializeEmptyCollectionsInsteadOfNull__ force the creation of empty collections instead of null when the hierarchy is left by default to zero.
+### InitializeNullCollectionsInsteadOfEmpty
+_InitializeNullCollectionsInsteadOfEmpty_ force the creation of empty collections instead of null when the hierarchy is left by default to zero.
 
 ## Builder configuration
-It is possible to configure the builder so that the exclusions can be automatically set by default based on the built type and the desired __Operation__.
+It is possible to configure the builder so that the exclusions can be automatically set by default based on the built type and the desired _Operation_.
 
-An __Operation__ can be specified using ```Builder<T>.new().For(Operation.Persistence)```, the available operations are:
+An _Operation_ can be specified using ```Builder<T>.new().For(Operation.Persistence)```, the available operations are:
 - Default (Set by default when not specified)
 - Create
 - Update
@@ -182,7 +182,7 @@ An __Operation__ can be specified using ```Builder<T>.new().For(Operation.Persis
 - Persistence
 
 In order to configure the Builder, it is necessary to use create an assembly called **BuilderConfiguration** and place it in test project bin folder.
-When the builder is created using the __New()__ method, it will search for the assembly and try to load the class implementing the interface __IBuilderExclusionMapping__.
+When the builder is created using the _New()_ method, it will search for the assembly and try to load the class implementing the interface _IBuilderExclusionMapping_.
 
 The class should contain the mappings desired for the tested application as shown below in this example:
 

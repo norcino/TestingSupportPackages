@@ -39,7 +39,7 @@ For these reasons and more, I decided to create **[Fluent Assertion for MSTest](
 var listOfHundredUsers = Builder<User>.New().BuildMany(100);
 ````
 
-[NuGet](https://www.nuget.org/packages/Object.Builder/)  _PM> Install-Package Object.Builder -Version 1.0.10_
+[NuGet](https://www.nuget.org/packages/Object.Builder/)  _PM> Install-Package Object.Builder -Version 1.1.0_
 
 ### AnonymousData
 <img src="https://github.com/norcino/TestingSupportPackages/blob/master/AnonymousData/Logo.png" alt="AnonymousData" width="64"/>

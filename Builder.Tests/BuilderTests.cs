@@ -470,6 +470,9 @@ namespace Builder.Tests
         [TestMethod]
         public void Builder_should_use_exclusion_mappings_from_Assembly_BuilderConfiguration_and_use_generic_operation()
         {
+            // This is needed to force the assembly to be copied in the bin folder when running tests in GitHub
+            var myCuystomExclusions = new MyCustomExclusions();
+
             // See MyCustomExclusions class
             var generatedType1 = Builder<Type1>.New().Build();
 

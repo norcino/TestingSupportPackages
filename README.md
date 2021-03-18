@@ -43,6 +43,7 @@ var listOfHundredUsers = Builder<User>.New().BuildMany(100);
 
 ### AnonymousData
 <img src="https://github.com/norcino/TestingSupportPackages/blob/master/AnonymousData/Logo.png" alt="AnonymousData" width="64"/>
+
 [AnonymousData](AnonymousData/Readme.md) will help you remove constant explicit values from the tests setup, replacing it with a reach and concise self explanatory text like:
 
 ````
@@ -54,7 +55,7 @@ This will help create cleaner and more readable tests quicker.
 
 [NuGet](https://www.nuget.org/packages/AnonymousData/)  _PM> Install-Package AnonymousData -Version 1.0.8_
 
-### Fluent Assertion for MSTest
+### Fluent Assertion for MSTest (Prototyping state - Not recommended for production)
 <img src="https://github.com/norcino/TestingSupportPackages/blob/master/FluentAssertion.MSTest/Logo.png" alt="FluentAssertion for MSTest" width="64"/>
 
 [FluentAssertion.MSTest](FluentAssertion.MSTest/Readme.md) allows to write chanined assertions fluently in one statement, including _words_ helpful to make the reading of the assertions more fluent, friendly and clear.
@@ -62,6 +63,5 @@ This will help create cleaner and more readable tests quicker.
 var user = sut.GetUserById(userId);
 Assert.That.This(user).HasNonNull(u => u.Email).And().Has(u => u.Name == "Bob");
 ````
-To find out more follow the link to get to the dedicated _[readme.md](FluentAssertion.MSTest/Readme.md)_.
 
 [NuGet](https://www.nuget.org/packages/FluentAssertion.MSTest/)  _PM> Install-Package FluentAssertion.MSTest -Version 0.1.4_

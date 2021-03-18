@@ -40,6 +40,15 @@ var listOfHundredUsers = Builder<User>.New().BuildMany(100);
 ````
 
 ### AnonymousData
+<img src="https://github.com/norcino/TestingSupportPackages/blob/master/AnonymousData/Logo.png" alt="AnonymousData" width="64"/>
+[AnonymousData](AnonymousData/Readme.md) will help you remove constant explicit values from the tests setup, replacing it with a reach and concise self explanatory text like:
+
+````
+var username = Any.String();
+
+var expectedUri = Any.Uri();
+````
+This will help create cleaner and more readable tests quicker.
 
 ### Fluent Assertion for MSTest
 <img src="https://github.com/norcino/TestingSupportPackages/blob/master/FluentAssertion.MSTest/Logo.png" alt="FluentAssertion for MSTest" width="64"/>

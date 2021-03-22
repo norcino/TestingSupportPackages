@@ -1,5 +1,6 @@
 ﻿using FluentAssertion.MSTest.Framework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace FluentAssertion.MSTest
 {
@@ -15,13 +16,13 @@ namespace FluentAssertion.MSTest
         /// <typeparam name="T">Type of the object</typeparam>
         /// <typeparam name="O">Expected Object type to verify</typeparam>
         /// <param name="assertObject">Assert object</param>
-        public static void IsDerivedFrom<T, O>(this AssertObject<O> assertObject, string message = null)
+        public static AssertObject<O> IsDerivedFrom<O>(this AssertObject<O> assertObject, Type type, string message = null)
         {
-            if (assertObject.Object is T)
+            if (assertObject.Object.GetType().IsAssignableFrom(type))
             {
-                return;
+                return assertObject;
             }
-            throw new AssertFailedException(message ?? $"Expected type to be derived of {typeof(T)} but was {assertObject.GetType()}");
+            throw new AssertFailedException(message ?? $"Expected type to be derived of {type.Name} but was {assertObject.GetType()}");
         }
 
         /// <summary>
@@ -30,13 +31,14 @@ namespace FluentAssertion.MSTest
         /// <typeparam name="T">Type of the object</typeparam>
         /// <typeparam name="O">Expected Object type to verify</typeparam>
         /// <param name="assertObject">Assert object</param>
-        public static void Is<T, O>(this AssertObject<O> assertObject, string message = null)
+        public static AssertObject<O> Is<O>(this AssertObject<O> assertObject, Type type, string message = null)
         {
-            if (assertObject.Object is T)
+            if (assertObject.Object.GetType() == type)
             {
-                return;
+                return assertObject;
             }
-            throw new AssertFailedException(message ?? $"Expected type {typeof(T)} but was {assertObject.GetType()}");
+
+            throw new AssertFailedException(message ?? $"Expected type {type.Name} but was {assertObject.GetType()}");
         }
         #endregion
     }

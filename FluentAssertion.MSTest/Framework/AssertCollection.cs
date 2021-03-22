@@ -13,7 +13,7 @@ namespace FluentAssertion.MSTest.Framework
     /// <typeparam name="T">Generic type for the collection</typeparam>
     public class AssertCollection<T>
     {
-        public readonly ReadOnlyCollection<T> Collection;
+        public readonly IReadOnlyList<T> Collection;
 
         public AssertCollection(IEnumerable<T> enumerable)
         {

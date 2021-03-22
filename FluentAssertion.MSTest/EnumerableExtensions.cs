@@ -15,17 +15,17 @@ namespace FluentAssertion.MSTest
     public static class EnumerableExtensions
     {
         #region Starting Assertion Words
-        public static AssertCollection<T> These<T>(this Assert assert, ICollection<T> collection)
+        public static AssertCollection<T> These<T>(this Assert assert, IEnumerable<T> collection)
         {
             return new AssertCollection<T>(collection);
         }
 
-        public static AssertCollection<T> This<TC, T>(this Assert assert, ICollection<T> collection) where TC : ICollection<T>
+        public static AssertCollection<T> This<TC, T>(this Assert assert, IEnumerable<T> collection) where TC : IEnumerable<T>
         {
             return new AssertCollection<T>(collection);
         }
         #endregion
-        public static AssertCollection<T> AreSameAs<T>(this AssertCollection<T> assertCollection, ICollection<T> otherCollection)
+        public static AssertCollection<T> AreSameAs<T>(this AssertCollection<T> assertCollection, IEnumerable<T> otherCollection)
         {
             if (assertCollection.Collection == null && otherCollection != null)
                 Assert.Fail("The collection was expected to be a null collection but it wasn't");
@@ -33,8 +33,8 @@ namespace FluentAssertion.MSTest
             if (assertCollection.Collection != null && otherCollection == null)
                 Assert.Fail("The collection was expected to be Equivalent but the collection was null");
             
-            if (assertCollection.Collection.Count != otherCollection.Count)
-                Assert.Fail($"The collection was expected to contain {assertCollection.Collection.Count} elements but contained {otherCollection.Count}");
+            if (assertCollection.Collection.Count != otherCollection.Count())
+                Assert.Fail($"The collection was expected to contain {assertCollection.Collection.Count} elements but contained {otherCollection.Count()}");
 
             foreach(var item in assertCollection.Collection)
             {

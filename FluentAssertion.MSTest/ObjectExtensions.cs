@@ -42,6 +42,11 @@ namespace FluentAssertion.MSTest
         }
         #endregion
 
+        public static AssertObject<TN> As<TN>(this AssertObject<object> assertObject) where TN : class
+        {
+            return new AssertObject<TN>(assertObject.Object as TN);
+        }
+
         #region Assertions
         /// <summary>
         /// Verifies that the test subject has the desired value
@@ -304,6 +309,28 @@ namespace FluentAssertion.MSTest
             if (!value.Equals(default(P)))
             {
                 Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] to have the default value [{default(P)}]");
+            }
+            return assertObject;
+        }
+
+        public static AssertObject<T> HasDefaultValue<T>(this AssertObject<T> assertObject, string message = null)
+        {            
+            if (!assertObject.Object.Equals(default(T)))
+            {                
+                    Assert.Fail(message ?? $"Expected to have default value [{default(T)}] but found [{assertObject.Object}]");
+
+                return assertObject;
+            }
+            return assertObject;
+        }
+
+        public static AssertObject<T> HasNonDefaultValue<T>(this AssertObject<T> assertObject, string message = null)
+        {
+            if (assertObject.Object.Equals(default(T)))
+            {
+                Assert.Fail(message ?? $"Expected not to have default value but found [{default(T)}]");
+
+                return assertObject;
             }
             return assertObject;
         }

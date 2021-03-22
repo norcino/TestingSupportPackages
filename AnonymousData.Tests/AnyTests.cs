@@ -1,5 +1,8 @@
+using FluentAssertion.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +18,14 @@ namespace AnonymousData.Tests
         public ForTesting EnumField;
         public List<string> List;
         public object Object;
+        public StringBuilder StringBuilder;
+        public SortedList SortedList;
+        public ConcurrentQueue<int> ConcurrentList;
+        public Dictionary<string, int> Dictionary;
+        public List<ClassForTesting> RecursiveList;
+        public ClassForTesting[] RecursiveArray;
+        public string[] StringArray;
+        public ClassForTesting SameObject;
     }
 
     public enum ForTesting
@@ -28,20 +39,161 @@ namespace AnonymousData.Tests
     [TestClass]
     public class AnyTests
     {
+        #region Of T
+        [TestMethod]
+        public void Of_should_return_instance_of_object()
+        {
+            var generatedType = Any.Of<object>();
+            Assert.IsNotNull(generatedType);
+        }
+
+        [TestMethod]
+        public void Of_should_return_instance_of_int()
+        {
+            var generatedType = Any.Of<int>();
+            Assert.That.This(generatedType).IsNotNull().And().HasNonDefaultValue();
+        }
+
+        [TestMethod]
+        public void Of_should_return_instance_of_string()
+        {
+            var generatedType = Any.Of<string>();
+            Assert.That.This(generatedType).IsNotNull().And().HasNonDefaultValue();
+        }
+
+        [TestMethod]
+        public void Of_should_return_instance_of_List_of_string()
+        {
+            var generatedType = Any.Of<List<string>>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_should_return_instance_of_string_array()
+        {
+            var generatedType = Any.Of<string[]>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_should_return_instance_of_Entity_array()
+        {
+            var generatedType = Any.Of<ClassForTesting[]>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_should_return_instance_of_Dictionary()
+        {
+            var generatedType = Any.Of<Dictionary<string, ClassForTesting>>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
         [TestMethod]
         public void Of_should_return_type_instance_with_random_properties()
-        {
-            for (int i = 0; i < 100000; i++)
-            {
-                var randomType = Any.Of<ClassForTesting>();
+        { 
+            var randomType = Any.Of<ClassForTesting>();
 
-                Assert.IsNotNull(randomType.StringField);
-                Assert.IsNotNull(randomType.TimeSpanField);
-                Assert.IsNotNull(randomType.DateTimeProperty);
-                Assert.IsNull(randomType.Object);
-                Assert.IsNull(randomType.List);
-            }
+            Assert.That.This(randomType).IsNotNull()
+                .And().HasNonDefault(e => e.Object)
+                .And().HasNonDefault(e => e.SortedList)
+                .And().HasNonDefault(e => e.StringBuilder)
+                .And().HasNonDefault(e => e.StringField)
+                .And().HasNonDefault(e => e.TimeSpanField)
+                .And().HasNonDefault(e => e.SameObject)
+                .And().HasNonDefault(e => e.RecursiveList)
+                .And().HasNonDefault(e => e.RecursiveArray)
+                .And().HasNonDefault(e => e.StringArray)
+                .And().HasNonDefault(e => e.List);
+
+            Assert.That.These(randomType.List).IsNotNullOrEmpty();
+            Assert.That.These(randomType.RecursiveArray).IsNotNullOrEmpty();
+            Assert.That.These(randomType.RecursiveList).IsNotNullOrEmpty();
+            Assert.That.These(randomType.StringArray).IsNotNullOrEmpty();            
+            Assert.That.These(randomType.Dictionary).IsNotNullOrEmpty();
+
+            Assert.That.These(randomType.ConcurrentList).IsNotNull();
         }
+        #endregion
+
+        #region Of Type
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_object()
+        {
+            var generatedType = Any.Of<object>();
+            Assert.IsNotNull(generatedType);
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_int()
+        {
+            var generatedType = Any.Of<int>();
+            Assert.That.This(generatedType).IsNotNull().And().HasNonDefaultValue();
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_string()
+        {
+            var generatedType = Any.Of<string>();
+            Assert.That.This(generatedType).IsNotNull().And().HasNonDefaultValue();
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_List_of_string()
+        {
+            var generatedType = Any.Of<List<string>>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_string_array()
+        {
+            var generatedType = Any.Of<string[]>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_Entity_array()
+        {
+            var generatedType = Any.Of<ClassForTesting[]>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_instance_of_Dictionary()
+        {
+            var generatedType = Any.Of<Dictionary<string, ClassForTesting>>();
+            Assert.That.These(generatedType).IsNotNullOrEmpty();
+        }
+
+        [TestMethod]
+        public void Of_Type_should_return_type_instance_with_random_properties()
+        {
+            var randomType = Any.Of(typeof(ClassForTesting));
+
+            Assert.That.This(randomType).IsNotNull()
+                .And().IsDerivedFrom(typeof(ClassForTesting))
+                .As<ClassForTesting>()
+                .HasNonDefault(e => e.Object)
+                .And().HasNonDefault(e => e.SortedList)
+                .And().HasNonDefault(e => e.StringBuilder)
+                .And().HasNonDefault(e => e.StringField)
+                .And().HasNonDefault(e => e.TimeSpanField)
+                .And().HasNonDefault(e => e.SameObject)
+                .And().HasNonDefault(e => e.RecursiveList)
+                .And().HasNonDefault(e => e.RecursiveArray)
+                .And().HasNonDefault(e => e.StringArray)
+                .And().HasNonDefault(e => e.List);
+
+            var classForTesting = (ClassForTesting)randomType;
+            Assert.That.These(classForTesting.List).IsNotNullOrEmpty();
+            Assert.That.These(classForTesting.RecursiveArray).IsNotNullOrEmpty();
+            Assert.That.These(classForTesting.RecursiveList).IsNotNullOrEmpty();
+            Assert.That.These(classForTesting.StringArray).IsNotNullOrEmpty();
+            Assert.That.These(classForTesting.Dictionary).IsNotNullOrEmpty();
+            Assert.That.These(classForTesting.ConcurrentList).IsNotNull();
+        }
+        #endregion
 
         #region In Enum
         [TestMethod]
@@ -63,7 +215,7 @@ namespace AnonymousData.Tests
         public void In_should_retun_random_element_in_the_list_of_parameters()
         {
             var options = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-            var result = Any.In(options);
+            var result = Any.In<string>(options);
             Assert.IsTrue(options.Contains(result));
         }
 
@@ -71,7 +223,7 @@ namespace AnonymousData.Tests
         public void In_should_retun_the_provided_option_if_only_one_available()
         {
             var options = new List<string> { "OnlyOne" };
-            var result = Any.In(options);
+            var result = Any.In<string>(options);
             Assert.AreEqual(options.First(), result);
         }
 
@@ -84,17 +236,17 @@ namespace AnonymousData.Tests
 
         #region Of Params
         [TestMethod]
-        public void Of_should_retun_random_element_in_the_list_of_parameters()
+        public void In_should_return_random_element_in_the_parameters()
         {
             var options = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-            var result = Any.Of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
+            var result = Any.In("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
             Assert.IsTrue(options.Contains(result));            
         }
 
         [TestMethod]
-        public void Of_should_retun_the_provided_option_if_only_one_available()
+        public void In_should_return_the_provided_option_if_only_one_available()
         {
-            var result = Any.Of("OnlyOption");
+            var result = Any.In("OnlyOption");
             Assert.AreEqual("OnlyOption", result);
         }
 

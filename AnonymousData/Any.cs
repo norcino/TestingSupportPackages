@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -19,14 +21,18 @@ namespace AnonymousData
     {
         private static readonly char[] AphanumericChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
         private static int _seed = Environment.TickCount;
-        private static readonly ThreadLocal<Random> RandomWrapper =
-            new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref _seed)));
+        private static readonly ThreadLocal<Random> RandomWrapper = new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref _seed)));
         private static bool _doNotAcceptDefaultValues = false;
-
-        private static Random GetThreadRandom()
-        {
-            return RandomWrapper.Value;
-        }
+        private static List<Type> baseTypes = new List<Type> {
+                typeof(DateTime),
+                typeof(TimeSpan),
+                typeof(Guid),
+                typeof(Uri),
+                typeof(MailAddress),
+                typeof(string),
+                typeof(object),
+                typeof(StringBuilder)
+            };
 
         /// <summary>
         /// Random number is generated with the specified maximum length of digits
@@ -561,7 +567,7 @@ namespace AnonymousData
         /// <typeparam name="T">Type of objects to be seleted</typeparam>
         /// <param name="options">List of options to select from</param>
         /// <returns>A randomly selected option</returns>
-        public static T Of<T>(params T[] options)
+        public static T In<T>(params T[] options)
         {
             return In(options.AsEnumerable());
         }
@@ -571,23 +577,26 @@ namespace AnonymousData
         /// </summary>
         /// <typeparam name="T">Type of the object to generate</typeparam>
         /// <returns>Instance of T with random properties and fields</returns>
-        public static T Of<T>() where T : new()
+        public static T Of<T>(CharSet charSet = CharSet.Alphanumeric)
         {
-            var e = (T)Activator.CreateInstance(typeof(T));
-            var properties = e.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            if(IsBaseType(typeof(T)))
+                return (T)GetBesicTypeValueFor(typeof(T), charSet, false);
 
-            foreach (var propertyInfo in properties)
-            {
-                propertyInfo.SetValue(e, GenerateAnonymousData(e, propertyInfo.PropertyType, propertyInfo.Name));
-            }
+            return (T) GenerateObjectMembers(typeof(T), charSet, true);
+        }
+                
+        /// <summary>
+        /// Generate an object of Type with random properties and fields
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="charSet"></param>
+        /// <returns>Instance of Type with random properties and fields</returns>
+        public static object Of(Type t, CharSet charSet = CharSet.Alphanumeric)
+        {
+            if (IsBaseType(t))
+                return GetBesicTypeValueFor(t, charSet, false);
 
-            var fields = e.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
-
-            foreach (var fieldInfo in fields)
-            {
-                fieldInfo.SetValue(e, GenerateAnonymousData(e, fieldInfo.FieldType, fieldInfo.Name));
-            }
-            return e;
+            return GenerateObjectMembers(t, charSet, true);
         }
 
         /// <summary>
@@ -628,53 +637,6 @@ namespace AnonymousData
             return System.Guid.NewGuid();
         }
 
-        internal static object GenerateAnonymousData(object entity, Type propertyType, string propertyName)
-        {
-            if (propertyType == typeof(string))
-                return Any.String(propertyName);
-
-            if (propertyType == typeof(sbyte) || propertyType == typeof(byte) || propertyType == typeof(Byte) || propertyType == typeof(SByte))
-                return Any.Byte();
-
-            if (propertyType == typeof(short) || propertyType == typeof(ushort) || propertyType == typeof(Int16) || propertyType == typeof(UInt16))
-                return Any.Short();
-
-            if (propertyType == typeof(int) || propertyType == typeof(uint) || propertyType == typeof(Int32) || propertyType == typeof(UInt32))
-                return Any.Int(3, false);
-
-            if (propertyType == typeof(long) || propertyType == typeof(ulong) || propertyType == typeof(Int64) || propertyType == typeof(UInt64))
-                return Any.Long();
-
-            if (propertyType == typeof(double) || propertyType == typeof(Double))
-                return Any.Double();
-
-            if (propertyType == typeof(decimal) || propertyType == typeof(Decimal))
-                return Any.Decimal();
-
-            if (propertyType == typeof(float) || propertyType == typeof(Single))
-                return Any.Float();
-
-            if (propertyType == typeof(char) || propertyType == typeof(Char))
-                return Any.Char();
-
-            if (propertyType == typeof(DateTime))
-                return Any.DateTime();
-
-            if (propertyType == typeof(TimeSpan))
-                return Any.TimeSpan();
-            
-            if (propertyType?.BaseType == typeof(Enum))
-            {
-                var randomIndex = GetThreadRandom().Next(0, Enum.GetNames(propertyType).Length - 1);
-                return Enum.GetValues(propertyType).GetValue(randomIndex);
-            }
-
-            if (propertyType.IsValueType)
-                return Activator.CreateInstance(propertyType);
-
-            return null;
-        }
-
         /// <summary>
         /// Set the random gerator mode to avoid default results with same values as the default
         /// </summary>
@@ -682,6 +644,233 @@ namespace AnonymousData
         public static void ExcludeDefaultValues(bool excludeDefaultValues)
         {
             _doNotAcceptDefaultValues = excludeDefaultValues;
+        }
+
+        /// <summary>
+        /// Generates all properties for an object
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="charSet"></param>
+        /// <returns></returns>
+        private static object GenerateObjectMembers(Type t, CharSet charSet, bool propagate)
+        {
+            // Handle IEnumerable members if the hierarchy depth has been set
+            if (typeof(IEnumerable).IsAssignableFrom(t))
+            {
+                return GenerateEnumerations(t, charSet, propagate);
+            }
+
+            // Reference object requires generation for each member
+            var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var e = Activator.CreateInstance(t);
+
+            foreach (var propertyInfo in properties)
+            {
+                propertyInfo.SetValue(e, GetBesicTypeValueFor(propertyInfo.PropertyType, charSet, propagate));
+            }
+
+            var fields = t.GetFields(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var fieldInfo in fields)
+            {
+                fieldInfo.SetValue(e, GetBesicTypeValueFor(fieldInfo.FieldType, charSet, propagate));
+            }
+
+            return e;
+        }
+
+        private static bool IsBaseType(Type t)
+        {
+            return t.IsValueType || baseTypes.Contains(t) || t?.BaseType == typeof(Enum);
+        }
+
+        private static object GetBesicTypeValueFor(Type type, CharSet charSet, bool propagate)
+        {
+            if (type == typeof(int) || type == typeof(uint))
+                return (object)Any.Int(3, false);
+
+            if (type == typeof(string))
+                return Any.String(length: 15, charSet: charSet);
+
+            if (type == typeof(sbyte) || type == typeof(byte))
+                return (object)Any.Byte();
+
+            if (type == typeof(short) || type == typeof(ushort))
+                return (object)Any.Short();
+
+            if (type == typeof(long) || type == typeof(ulong))
+                return (object)Any.Long();
+
+            if (type == typeof(double))
+                return (object)Any.Double();
+
+            if (type == typeof(decimal))
+                return (object)Any.Decimal();
+
+            if (type == typeof(float))
+                return (object)Any.Float();
+
+            if (type == typeof(char))
+                return (object)Any.Char(charSet);
+
+            if (type == typeof(DateTime))
+                return (object)Any.DateTime();
+
+            if (type == typeof(TimeSpan))
+                return (object)Any.TimeSpan();
+
+            if (type == typeof(Guid))
+                return (object)Any.Guid();
+
+            if (type == typeof(Uri))
+                return (object)Any.Uri();
+
+            if (type == typeof(MailAddress))
+                return (object)new MailAddress(Any.Email());
+
+            if (type == typeof(object))
+                return new object();
+
+            if (type == typeof(StringBuilder))
+                return new StringBuilder(Any.String());            
+
+            if (type?.BaseType == typeof(Enum))
+            {
+                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(type).Length - 1);
+                return (object)Enum.GetValues(type).GetValue(randomIndex);
+            }
+
+            // Handle IEnumerable members if the hierarchy depth has been set
+            if(typeof(IEnumerable).IsAssignableFrom(type))
+            {
+                return GenerateEnumerations(type, charSet, propagate);
+            }
+
+            try
+            {
+                return Activator.CreateInstance(type);
+            }
+            catch
+            {
+                throw new NotSupportedException($"Type {type.Name} is not supported");
+            }
+        }
+
+        private static object GenerateEnumerations(Type type, CharSet charSet, bool propagate)
+        {
+            if (typeof(IList).IsAssignableFrom(type) && type.IsGenericType)
+            {
+                return GenerateList(type, charSet, propagate);
+            }
+
+            if (type.IsArray)
+            {
+                return GenerateArray(type, charSet, propagate);
+            }
+
+            if (typeof(IDictionary).IsAssignableFrom(type) && type.IsGenericType)
+            {
+                return GenerateDictionary(type, charSet, propagate);
+            }
+
+            // Non generic List, SortedList, ArrayList, Hashtable ..
+            return Activator.CreateInstance(type);
+        }
+
+        private static object GenerateDictionary(Type type, CharSet charSet, bool propagate)
+        {
+            var keyType = type.GenericTypeArguments.FirstOrDefault();
+            var valueType = type.GenericTypeArguments.LastOrDefault();
+            var dictionary = (IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(keyType, valueType));
+            
+            if (!propagate)
+                return dictionary;
+
+            object key, value;
+
+            if (IsBaseType(keyType))
+            {
+                key = GetBesicTypeValueFor(keyType, charSet, false);
+            }
+            else
+            {
+                key = GenerateObjectMembers(keyType, charSet, false);
+            }
+
+            if (IsBaseType(valueType))
+            {
+                value = GetBesicTypeValueFor(valueType, charSet, false);
+            }
+            else
+            {
+                value = GenerateObjectMembers(valueType, charSet, false);
+            }
+
+            dictionary.Add(key, value);
+            return dictionary;
+        }
+
+        private static object GenerateList(Type type, CharSet charSet, bool propagate)
+        {
+            var genericTypeArgument = type.GenericTypeArguments.FirstOrDefault();
+
+            IList list;
+            if (genericTypeArgument.IsGenericTypeDefinition)
+            {
+                list = (IList)Activator.CreateInstance(type.MakeGenericType(genericTypeArgument));
+            }
+            else
+            {
+                list = (IList)Activator.CreateInstance(type);
+            }
+
+            if (!propagate)
+                return list;
+
+            if (IsBaseType(genericTypeArgument))
+            {
+                list.Add(GetBesicTypeValueFor(genericTypeArgument, charSet, false));
+            }
+            else
+            {
+                list.Add(GenerateObjectMembers(genericTypeArgument, charSet, false));
+            }
+
+            return list;
+        }
+
+        private static object GenerateArray(Type type, CharSet charSet, bool propagate)
+        {
+            var elementType = type.GetElementType();
+            var array = (object[])Array.CreateInstance(elementType, 1);
+
+            if (!propagate)
+                return array;
+
+            if (IsBaseType(elementType))
+            {
+                array[0] = GetBesicTypeValueFor(elementType, charSet, false);
+            }
+            else
+            {
+                array[0] = GenerateObjectMembers(elementType, charSet, false);
+            }
+
+            return array;
+        }
+
+        private static Random GetThreadRandom()
+        {
+            return RandomWrapper.Value;
+        }
+
+        public static IEnumerable Add<T>(this IEnumerable e, T value)
+        {
+            foreach (var cur in e)
+            {
+                yield return cur;
+            }
+            yield return value;
         }
     }
 }

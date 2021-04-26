@@ -171,6 +171,9 @@ _NumberOfNestedEntitiesInCollections_ is the default number of entities created 
 ### InitializeNullCollectionsInsteadOfEmpty
 _InitializeNullCollectionsInsteadOfEmpty_ force the creation of empty collections instead of null when the hierarchy is left by default to zero.
 
+### SetPropertiesPrivateSetters
+_SetPropertiesPrivateSetters_ can be set to true to generate random values also for public properties with private setters.
+
 ## Builder configuration
 It is possible to configure the builder so that the exclusions can be automatically set by default based on the built type and the desired _Operation_.
 

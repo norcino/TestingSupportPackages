@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Mail;
 using System.Reflection;
+using System.Text;
 
 namespace Builder
 {
@@ -14,6 +15,7 @@ namespace Builder
     {
         public static int NumberOfNestedEntitiesInCollections { get; set; } = 5;
         public static bool InitializeNullCollectionsInsteadOfEmpty { get; set; } = false;
+        public static bool SetPropertiesPrivateSetters { get; set; } = false;
     }
 
     /// <inheritdoc cref="IBuilder{TE}"/>
@@ -89,8 +91,16 @@ namespace Builder
             
             foreach (var propertyInfo in properties)
             {
+                // Property is ignored
                 if (IsMemberInExludeList(propertyInfo.Name)) continue;
-                propertyInfo.SetValue(e, GenerateAnonymousData(e, propertyInfo.PropertyType, propertyInfo.Name, hierarchyDepth, Exclusions));
+
+                // Property has not setter
+                if (propertyInfo.GetSetMethod(true) == null) continue;
+
+                // Property has private setter and should not be set
+                if (propertyInfo.GetSetMethod(true).IsPrivate && !SetPropertiesPrivateSetters) continue;
+
+                propertyInfo.GetSetMethod(true).Invoke(e, new object[] { GenerateAnonymousData(e, propertyInfo.PropertyType, propertyInfo.Name, hierarchyDepth, Exclusions) });
             }
 
             var fields = e.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
@@ -190,9 +200,9 @@ namespace Builder
         /// <param name="hierarchyDepth"></param>
         /// <param name="exclusions"></param>
         /// <returns>The entity with the property populated with random value</returns>
-        internal virtual object GenerateAnonymousData(object entity, Type memberType, string propertyName, int hierarchyDepth, IEnumerable<string> exclusions)
+        internal virtual object GenerateAnonymousData(object entity, Type type, string propertyName, int hierarchyDepth, IEnumerable<string> exclusions)
         {
-            if (memberType == typeof(string))
+            if (type == typeof(string))
             {
                 var propertyNameLowered = propertyName.ToLower();
                 if (propertyName.Contains("email") || propertyName.Contains("mailaddress"))
@@ -206,63 +216,66 @@ namespace Builder
                 }
 
                 return Any.String(propertyName, 15 + propertyName.Length, DefaultStringCharSet);
-            }                
-
-            if (memberType == typeof(sbyte) || memberType == typeof(byte) || memberType == typeof(Byte) || memberType == typeof(SByte))
-                return Any.Byte();
-
-            if (memberType == typeof(short) || memberType == typeof(ushort) || memberType == typeof(Int16) || memberType == typeof(UInt16))
-                return Any.Short();
-
-            if (memberType == typeof(int) || memberType == typeof(uint) || memberType == typeof(Int32) || memberType == typeof(UInt32))
-                return Any.Int(3, false);
-
-            if (memberType == typeof(long) || memberType == typeof(ulong) || memberType == typeof(Int64) || memberType == typeof(UInt64))
-                return Any.Long();
-
-            if (memberType == typeof(double) || memberType == typeof(Double))
-                return Any.Double();
-
-            if (memberType == typeof(decimal) || memberType == typeof(Decimal))
-                return Any.Decimal();
-
-            if (memberType == typeof(float) || memberType == typeof(Single))
-                return Any.Float();
-
-            if (memberType == typeof(char) || memberType == typeof(Char))
-                return Any.Char(DefaultStringCharSet);
-
-            if (memberType == typeof(DateTime))
-                return Any.DateTime();
-
-            if (memberType == typeof(TimeSpan))
-                return Any.TimeSpan();
-
-            if (memberType == typeof(Guid))
-                return Any.Guid();
-
-            if (memberType == typeof(Uri))
-                return Any.Uri();
-
-            if (memberType == typeof(MailAddress))
-                return new MailAddress(Any.Email());
-
-            if (memberType?.BaseType == typeof(Enum))
-            {
-                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(memberType).Length - 1);
-                return Enum.GetValues(memberType).GetValue(randomIndex);
             }
 
-            // Handle all value types not handled above
-            if (memberType.IsValueType)
+            if (type == typeof(int) || type == typeof(uint))
+                return (object)Any.Int(3, false);
+
+            if (type == typeof(string))
+                return Any.String(length: 15, charSet: DefaultStringCharSet);
+
+            if (type == typeof(sbyte) || type == typeof(byte))
+                return (object)Any.Byte();
+
+            if (type == typeof(short) || type == typeof(ushort))
+                return (object)Any.Short();
+
+            if (type == typeof(long) || type == typeof(ulong))
+                return (object)Any.Long();
+
+            if (type == typeof(double))
+                return (object)Any.Double();
+
+            if (type == typeof(decimal))
+                return (object)Any.Decimal();
+
+            if (type == typeof(float))
+                return (object)Any.Float();
+
+            if (type == typeof(char))
+                return (object)Any.Char(DefaultStringCharSet);
+
+            if (type == typeof(DateTime))
+                return (object)Any.DateTime();
+
+            if (type == typeof(TimeSpan))
+                return (object)Any.TimeSpan();
+
+            if (type == typeof(Guid))
+                return (object)Any.Guid();
+
+            if (type == typeof(Uri))
+                return (object)Any.Uri();
+
+            if (type == typeof(MailAddress))
+                return (object)new MailAddress(Any.Email());
+
+            if (type == typeof(object))
+                return new object();
+
+            if (type == typeof(StringBuilder))
+                return new StringBuilder(Any.String());
+
+            if (type?.BaseType == typeof(Enum))
             {
-                return Activator.CreateInstance(memberType);
+                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(type).Length - 1);
+                return (object)Enum.GetValues(type).GetValue(randomIndex);
             }
 
             // Handle IEnumerable members if the hierarchy depth has been set
-            if (memberType.IsGenericType && typeof(IEnumerable).IsAssignableFrom(memberType))
+            if (type.IsGenericType && typeof(IEnumerable).IsAssignableFrom(type))
             {
-                var genericTypeArgument = memberType.GenericTypeArguments.FirstOrDefault();                
+                var genericTypeArgument = type.GenericTypeArguments.FirstOrDefault();                
                 if (!genericTypeArgument.IsClass || genericTypeArgument.IsGenericType)
                 {
                     return null;                
@@ -295,9 +308,9 @@ namespace Builder
             }
 
             // Handle Reference types members if the hierarchy depth has been set
-            if (hierarchyDepth > 0 && memberType.IsClass && !memberType.IsGenericType)
+            if (hierarchyDepth > 0 && type.IsClass && !type.IsGenericType)
             {
-                return GenerateAnonymousDateForChildEntityObject(entity, memberType, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.')));
+                return GenerateAnonymousDateForChildEntityObject(entity, type, propertyName, hierarchyDepth, exclusions?.Where(e => e.Contains('.')));
             }
 
             return null;

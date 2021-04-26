@@ -92,6 +92,31 @@ namespace Builder.Tests
         }
 
         [TestMethod]
+        public void Build_should_ignore_get_only_properties()
+        {
+            var builtObject = Builder<SutPoco>.New().Build();
+            Assert.That.This(builtObject).HasDefault(o => o.GetOnlyProperty);
+        }
+
+        [TestMethod]
+        public void Build_should_ignore_private_set_properties()
+        {
+            var builtObject = Builder<SutPoco>.New().Build();
+            Assert.That.This(builtObject).HasDefault(o => o.PrivateSetProperty);
+        }
+
+        [TestMethod]
+        public void Build_should_set_properties_with_private_setter_when_SetPropertiesPrivateSetters_true()
+        {
+            Builder.SetPropertiesPrivateSetters = true;
+
+            var builtObject = Builder<SutPoco>.New().Build();
+            Assert.That.This(builtObject).HasNonDefault(o => o.PrivateSetProperty);
+
+            Builder.SetPropertiesPrivateSetters = false;
+        }
+
+        [TestMethod]
         public void Build_should_allow_to_customize_creation_to_highlight_relevant_properties_and_fields()
         {
             var expectedBoolField = Any.Bool();

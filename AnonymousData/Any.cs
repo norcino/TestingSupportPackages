@@ -740,7 +740,6 @@ namespace AnonymousData
                 return (object)Enum.GetValues(type).GetValue(randomIndex);
             }
 
-            // Handle IEnumerable members if the hierarchy depth has been set
             if(typeof(IEnumerable).IsAssignableFrom(type))
             {
                 return GenerateEnumerations(type, charSet, propagate);

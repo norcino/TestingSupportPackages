@@ -45,6 +45,9 @@ namespace Builder.Tests
         public MailAddress EmailProperty { get; set; }
 
         public Uri UriProperty { get; set; }
+
+        public string GetOnlyProperty { get; }
+        public string PrivateSetProperty { get; private set; }
     }
 #pragma warning restore 0649
 }

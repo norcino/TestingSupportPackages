@@ -75,6 +75,12 @@ namespace FluentAssertion.MSTest
             return assertObject;
         }
 
+        public static AssertObject<T> IsNull<T>(this AssertObject<T> assertObject, string message = null)
+        {
+            Assert.IsNull(assertObject.Object, message ?? "Expected to be null");
+            return assertObject;
+        }
+
         /// <summary>
         /// Verifies that the test subject is true
         /// </summary>

@@ -39,15 +39,18 @@ namespace Builder.Tests
         public DateTime DateTimeProperty { get; set; }
         public TimeSpan TimeSpanProperty { get; set; }
         public SutEnum EnumProperty { get; set; }
-
         public Guid GuidProperty { get; set; }
-
         public MailAddress EmailProperty { get; set; }
-
         public Uri UriProperty { get; set; }
-
         public string GetOnlyProperty { get; }
         public string PrivateSetProperty { get; private set; }
+
+        public DateTime? NullableDateTime { get; set; }
+        public int? NullableInt { get; set; }
+        public double? NullableDouble { get; set; }
+        public SutEnum? NullableEnum { get; set; }
+        public TimeSpan? NullableTimeSpan { get; set; }
+        public Guid? NullableGuid { get; set; }
     }
 #pragma warning restore 0649
 }

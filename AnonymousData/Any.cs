@@ -17,7 +17,7 @@ namespace AnonymousData
     /// This in fact can be confused with the expectation to get exactly that value.
     /// </remarks>
     /// </summary>
-    public static class Any
+    public class Any
     {
         private static readonly char[] AphanumericChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
         private static int _seed = Environment.TickCount;
@@ -33,6 +33,57 @@ namespace AnonymousData
                 typeof(object),
                 typeof(StringBuilder)
             };
+
+        #region Unique values feature
+        private static AnyUnique anyUnique;
+        /// <summary>
+        /// Guarantee that the value returned in the following method is unique.
+        /// To avoid memory leaks consider calling Any.DisposeDefaultValues() when the unicity scope terminates, for example on a test teardown.
+        /// </summary>
+        /// <returns>Any instance which handles unique values</returns>
+        public static AnyUnique Unique { get
+            {
+                if (anyUnique == null)
+                {
+                    anyUnique = new AnyUnique();
+                }
+
+                return anyUnique;
+            }
+        }
+
+        public static void ResetUniqueValues()
+        {
+            anyUnique = null;
+        }
+        #endregion
+
+        private static Func<int, int, int> GenerateRandomIntValueHandlingUniqueness = (int mi, int ma) =>
+        {
+            const int MaximumRetryIterations = 10000;
+            int result;
+            bool notUnique = false;
+
+            int iterations = 0;
+            do
+            {
+                if (anyUnique != null)
+                {
+                    result = anyUnique.TryGetUniqueValue(Random().Next(mi, ma), out notUnique);
+                }
+                else
+                {
+                    result = Random().Next(mi, ma);
+                }
+
+                if (++iterations >= MaximumRetryIterations)
+                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider lenght, "+
+                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+            }
+            while (notUnique);
+
+            return result;
+        };
 
         /// <summary>
         /// Random number is generated with the specified maximum length of digits
@@ -62,7 +113,7 @@ namespace AnonymousData
         /// <param name="maxValue">Maximum value of the range (This has priority over lenght)</param>
         /// <returns>Random integer number</returns>
         public static int Int(int maxLength = 5, bool allowZero = true, bool onlyPositive = true, int? minValue = null, int? maxValue = null)
-        {            
+        {
             if (_doNotAcceptDefaultValues) allowZero = false;
 
             var max = maxValue ?? int.MaxValue;
@@ -74,26 +125,29 @@ namespace AnonymousData
             if (maxLength > 10)
                 throw new ArgumentOutOfRangeException($"{nameof(maxLength)} cannot be greater than 10");
 
-            if(maxValue.HasValue && minValue.HasValue)
-                return GetThreadRandom().Next(minValue.Value, maxValue.Value);
+            if (maxValue.HasValue && minValue.HasValue)
+            {
+                return GenerateRandomIntValueHandlingUniqueness(minValue.Value, maxValue.Value);
+            }
 
             var maxValueForLenght = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
-            
             if (minValue.HasValue)
-                return GetThreadRandom().Next(minValue.Value, maxValueForLenght);
+            {
+                return GenerateRandomIntValueHandlingUniqueness(minValue.Value, maxValueForLenght);
+            }
 
             if (maxValue.HasValue)
             {
                 var minimum = int.MinValue;
                 if (onlyPositive) minimum = 0;
                 if (!allowZero) minimum = 1;
-                return GetThreadRandom().Next(minimum, maxValue.Value);
+                return GenerateRandomIntValueHandlingUniqueness(minimum, maxValue.Value);
             }
 
             if (onlyPositive)
-                return GetThreadRandom().Next(allowZero ? 0 : 1, maxValueForLenght);
+                return GenerateRandomIntValueHandlingUniqueness(allowZero ? 0 : 1, maxValueForLenght);
 
-            return GetThreadRandom().Next(min, max);
+            return GenerateRandomIntValueHandlingUniqueness(min, max);
         }
 
         /// <summary>
@@ -158,7 +212,7 @@ namespace AnonymousData
         {
             if (_doNotAcceptDefaultValues) return true;
 
-            return GetThreadRandom().Next(0, 100) % 2 == 0;
+            return Random().Next(0, 100) % 2 == 0;
         }
 
         /// <summary>
@@ -173,7 +227,7 @@ namespace AnonymousData
         /// <returns>Random signed byte value</returns>
         public static sbyte SByte()
         {
-            var result = (sbyte)GetThreadRandom().Next(sbyte.MinValue, sbyte.MaxValue);
+            var result = (sbyte)Random().Next(sbyte.MinValue, sbyte.MaxValue);
             
             if (_doNotAcceptDefaultValues && default(sbyte) == result)
                 return SByte();
@@ -193,7 +247,7 @@ namespace AnonymousData
         /// <returns>Random signed byte value</returns>
         public static byte Byte()
         {
-            var result = (byte)GetThreadRandom().Next(0, byte.MaxValue);
+            var result = (byte)Random().Next(0, byte.MaxValue);
 
             if (_doNotAcceptDefaultValues && default(byte) == result)
                 return Byte();
@@ -213,7 +267,7 @@ namespace AnonymousData
         /// <returns>Random short value</returns>
         public static short Short()
         {
-            var result = (short)GetThreadRandom().Next(short.MinValue, short.MaxValue);
+            var result = (short)Random().Next(short.MinValue, short.MaxValue);
 
             if (_doNotAcceptDefaultValues && default(short) == result)
                 return Short();
@@ -228,17 +282,17 @@ namespace AnonymousData
         /// <returns>Random long value</returns>
         public static long Long(bool onlyPositive = true)
         {
-            long result = GetThreadRandom().Next(onlyPositive ? 0 : int.MinValue, int.MaxValue);
+            long result = Random().Next(onlyPositive ? 0 : int.MinValue, int.MaxValue);
 
             if(result > 0)
                 while(result < int.MaxValue)
                 {
-                    result += GetThreadRandom().Next(0, int.MaxValue);
+                    result += Random().Next(0, int.MaxValue);
                 }
             else if (result < 0)
                 while (result > int.MinValue)
                 {
-                    result += GetThreadRandom().Next(int.MinValue, 0);
+                    result += Random().Next(int.MinValue, 0);
                 }
 
             if (_doNotAcceptDefaultValues && default(long) == result)
@@ -256,7 +310,7 @@ namespace AnonymousData
         /// <returns>Double value</returns>
         public static double Double(int integerLenght = 4, int decimalLenght = 2)
         {
-            var randomDouble = GetThreadRandom().NextDouble();
+            var randomDouble = Random().NextDouble();
             var result = ((double)Any.Int(integerLenght)) + Math.Round(randomDouble, decimalLenght);
             
             if (_doNotAcceptDefaultValues && default(double) == result)
@@ -275,7 +329,7 @@ namespace AnonymousData
         /// <returns>Decimal value</returns>
         public static decimal Decimal(int integerLenght = 4, int decimalLenght = 2)
         {
-            var randomDecimal = (decimal)GetThreadRandom().NextDouble();
+            var randomDecimal = (decimal)Random().NextDouble();
             var result = ((decimal)Any.Int(integerLenght)) + Math.Round(randomDecimal, decimalLenght);
 
             if (_doNotAcceptDefaultValues && default(decimal) == result)
@@ -294,7 +348,7 @@ namespace AnonymousData
         /// <returns>Float value</returns>
         public static float Float(int integerLenght = 4, int decimalLenght = 2)
         {
-            var randomFloat = (float)GetThreadRandom().NextDouble();
+            var randomFloat = (float)Random().NextDouble();
             var result = ((float)Any.Int(integerLenght)) + (float)Math.Round(randomFloat, decimalLenght);
 
             if (_doNotAcceptDefaultValues && default(float) == result)
@@ -354,10 +408,10 @@ namespace AnonymousData
             var limitHours = 23;
             var limitMinutesSeconds = 59;
 
-            int days = GetThreadRandom().Next(0, maximumDays ?? (customLimit ? 0 : limitDays));
-            int hours = GetThreadRandom().Next(0, maximumHours ?? (customLimit ? 0 : limitHours));
-            int minutes = GetThreadRandom().Next(0, maximumMinutes ?? (customLimit ? 0 : limitMinutesSeconds));
-            int seconds = GetThreadRandom().Next(0, maximumSeconds ?? (customLimit ? 0 : limitMinutesSeconds));
+            int days = Random().Next(0, maximumDays ?? (customLimit ? 0 : limitDays));
+            int hours = Random().Next(0, maximumHours ?? (customLimit ? 0 : limitHours));
+            int minutes = Random().Next(0, maximumMinutes ?? (customLimit ? 0 : limitMinutesSeconds));
+            int seconds = Random().Next(0, maximumSeconds ?? (customLimit ? 0 : limitMinutesSeconds));
             var result = new TimeSpan(days, hours, minutes, seconds);
                 
             if (_doNotAcceptDefaultValues && default(TimeSpan) == result)
@@ -405,16 +459,16 @@ namespace AnonymousData
             int maxYear = 2100;
             if (future && limit.HasValue) maxYear = limit.Value.Year;
             
-            var year = GetThreadRandom().Next(future ? now.Year : minYear, future ? maxYear : now.Year);
+            var year = Random().Next(future ? now.Year : minYear, future ? maxYear : now.Year);
 
             var month = 1;
             
             if (now.Year == year)
             {
-                month = future ? GetThreadRandom().Next(now.Month, 12) : GetThreadRandom().Next(1, now.Month);
+                month = future ? Random().Next(now.Month, 12) : Random().Next(1, now.Month);
             } else
             {
-                month = GetThreadRandom().Next(1, 12);
+                month = Random().Next(1, 12);
             }
             
             var day = 1;                        
@@ -433,13 +487,13 @@ namespace AnonymousData
                 case 6:
                 case 9:
                 case 11:
-                    day = GetThreadRandom().Next(minimumDay, maximumDay ?? 30);
+                    day = Random().Next(minimumDay, maximumDay ?? 30);
                     break;
                 case 2:                    
-                    day = GetThreadRandom().Next(minimumDay, maximumDay ?? (System.DateTime.IsLeapYear(year) ? 29 : 28));
+                    day = Random().Next(minimumDay, maximumDay ?? (System.DateTime.IsLeapYear(year) ? 29 : 28));
                     break;
                 default:
-                    day = GetThreadRandom().Next(minimumDay, maximumDay ?? 31);
+                    day = Random().Next(minimumDay, maximumDay ?? 31);
                     break;
             }
 
@@ -450,7 +504,7 @@ namespace AnonymousData
                 if (future) minimumHour = now.Hour;
                 if (!future) maximumHour = now.Hour;
             }
-            var hour = GetThreadRandom().Next(minimumHour, maximumHour);
+            var hour = Random().Next(minimumHour, maximumHour);
 
             var minimumMinutes = 0;
             var maximumMinutes = 59;
@@ -459,7 +513,7 @@ namespace AnonymousData
                 if (future) minimumMinutes = now.Minute;
                 if (!future) maximumMinutes = now.Minute;
             }
-            var minute = GetThreadRandom().Next(minimumMinutes, maximumMinutes);
+            var minute = Random().Next(minimumMinutes, maximumMinutes);
             
             var minimumSeconds = 0;
             var maximumSeconds = 59;
@@ -468,7 +522,7 @@ namespace AnonymousData
                 if (future) minimumSeconds = now.Second;
                 if (!future) maximumSeconds = now.Second;
             }
-            var second = GetThreadRandom().Next(minimumSeconds, maximumSeconds);
+            var second = Random().Next(minimumSeconds, maximumSeconds);
 
             if(now.Year == year && now.Month == month && 
                 now.Day == day && now.Hour == hour && 
@@ -508,11 +562,11 @@ namespace AnonymousData
 
             if (CharSet.Alphanumeric == charSet)
             {
-                result = AphanumericChars[GetThreadRandom().Next(AphanumericChars.Length)];
+                result = AphanumericChars[Random().Next(AphanumericChars.Length)];
             }
             else if (CharSet.ASCII == charSet)
             {
-                result = (char)GetThreadRandom().Next(33, 126);
+                result = (char)Random().Next(33, 126);
             }
             else
             {
@@ -521,7 +575,7 @@ namespace AnonymousData
                 string transcodedResultString;
                 do
                 {
-                    result = (char)GetThreadRandom().Next(char.MinValue, char.MaxValue);
+                    result = (char)Random().Next(char.MinValue, char.MaxValue);
                     resultAsString = result.ToString();
                     transcodedResultString = Encoding.Unicode.GetString(Encoding.Unicode.GetBytes(resultAsString));
                 } while (resultAsString != transcodedResultString);
@@ -543,7 +597,7 @@ namespace AnonymousData
             var options = Enum.GetNames(typeof(T));
             var values = Enum.GetValues(typeof(T));
             
-            var randomIndex = GetThreadRandom().Next(0, options.Length - 1);
+            var randomIndex = Random().Next(0, options.Length - 1);
 
             return (T)values.GetValue(randomIndex);
         }
@@ -645,7 +699,43 @@ namespace AnonymousData
         {
             _doNotAcceptDefaultValues = excludeDefaultValues;
         }
-
+                
+        /// <summary>
+        /// Generates the Base64 string from a random string, with an optional prefix and a random suffix of the desired length
+        /// <example>
+        /// Get a random Base64 string
+        /// </example>
+        /// <code>
+        /// var expectedResult = Any.Base64String();
+        /// </code>
+        /// <example>
+        /// Get a random Base64 string with the original string of lenght 10
+        /// </example>
+        /// <code>
+        /// var expectedResult = Any.Base64String(10);
+        /// </code>
+        /// <example>
+        /// Get a random Base64 string, using a string of lenght 10 with prefix Name_
+        /// </example>
+        /// <code>
+        /// var expectedResult = Any.Base64String(10, "Name_");
+        /// </code>
+        /// <example>
+        /// Get a random Base64 string using a UTF-16 string long 10 characters
+        /// </example>
+        /// <code>
+        /// var expectedResult = Any.Base64String(length: 10, utf: true);
+        /// </code>
+        /// </summary>
+        /// <param name="length">Length of the random part of the string</param>
+        /// <param name="prefix">Prefix of the generated string</param>
+        /// <param name="charSet">Character set to be used for the string generation</param>
+        /// <returns>Base 64 string</returns>
+        public static string Base64String(string prefix = "", int length = 15, CharSet charSet = CharSet.Alphanumeric)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(String(prefix, length, charSet)));
+        }
+        #region Private methods
         /// <summary>
         /// Generates all properties for an object
         /// </summary>
@@ -686,40 +776,40 @@ namespace AnonymousData
 
         private static object GetBesicTypeValueFor(Type type, CharSet charSet, bool propagate)
         {
-            if (type == typeof(int) || type == typeof(uint))
+            if (type == typeof(int) || type == typeof(uint) || type == typeof(Nullable<int>) || type == typeof(Nullable<uint>))
                 return (object)Any.Int(3, false);
 
             if (type == typeof(string))
                 return Any.String(length: 15, charSet: charSet);
 
-            if (type == typeof(sbyte) || type == typeof(byte))
+            if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(Nullable<sbyte>) || type == typeof(Nullable<byte>))
                 return (object)Any.Byte();
 
-            if (type == typeof(short) || type == typeof(ushort))
+            if (type == typeof(short) || type == typeof(ushort) || type == typeof(Nullable<short>) || type == typeof(Nullable<ushort>))
                 return (object)Any.Short();
 
-            if (type == typeof(long) || type == typeof(ulong))
+            if (type == typeof(long) || type == typeof(ulong) || type == typeof(Nullable<long>) || type == typeof(Nullable<ulong>))
                 return (object)Any.Long();
 
-            if (type == typeof(double))
+            if (type == typeof(double) || type == typeof(Nullable<double>))
                 return (object)Any.Double();
 
-            if (type == typeof(decimal))
+            if (type == typeof(decimal) || type == typeof(Nullable<decimal>))
                 return (object)Any.Decimal();
 
-            if (type == typeof(float))
+            if (type == typeof(float) || type == typeof(Nullable<float>))
                 return (object)Any.Float();
 
-            if (type == typeof(char))
+            if (type == typeof(char) || type == typeof(Nullable<char>))
                 return (object)Any.Char(charSet);
 
-            if (type == typeof(DateTime))
+            if (type == typeof(DateTime) || type == typeof(Nullable<DateTime>))
                 return (object)Any.DateTime();
 
-            if (type == typeof(TimeSpan))
+            if (type == typeof(TimeSpan) || type == typeof(Nullable<TimeSpan>))
                 return (object)Any.TimeSpan();
 
-            if (type == typeof(Guid))
+            if (type == typeof(Guid) || type == typeof(Nullable<Guid>))
                 return (object)Any.Guid();
 
             if (type == typeof(Uri))
@@ -732,7 +822,7 @@ namespace AnonymousData
                 return new object();
 
             if (type == typeof(StringBuilder))
-                return new StringBuilder(Any.String());            
+                return new StringBuilder(Any.String());
 
             if (type?.BaseType == typeof(Enum))
             {
@@ -740,7 +830,14 @@ namespace AnonymousData
                 return (object)Enum.GetValues(type).GetValue(randomIndex);
             }
 
-            if(typeof(IEnumerable).IsAssignableFrom(type))
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && type.GetGenericArguments()[0].IsEnum)
+            {
+                var enumType = type.GenericTypeArguments.First();
+                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(enumType).Length - 1);
+                return (object)Enum.GetValues(enumType).GetValue(randomIndex);
+            }
+
+            if (typeof(IEnumerable).IsAssignableFrom(type))
             {
                 return GenerateEnumerations(type, charSet, propagate);
             }
@@ -858,18 +955,10 @@ namespace AnonymousData
             return array;
         }
 
-        private static Random GetThreadRandom()
+        private static Random Random()
         {
             return RandomWrapper.Value;
         }
-
-        public static IEnumerable Add<T>(this IEnumerable e, T value)
-        {
-            foreach (var cur in e)
-            {
-                yield return cur;
-            }
-            yield return value;
-        }
+        #endregion
     }
 }

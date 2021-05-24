@@ -10,17 +10,18 @@ namespace Builder.Tests
     [TestClass]
     public class BuilderTests
     {
+        #region Build Many
         [TestMethod]
         public void BuildMany_should_generate_the_expected_number_of_results_with_the_same_default_behaviour_and_applies_the_customization_action()
         {
-            var builtObjects = Builder<SutPoco>.New().BuildMany(100, (o,i) =>
+            var builtObjects = Builder<SutPoco>.New().BuildMany(100, (o, i) =>
             {
                 o.StringField = $"Element#{i}";
                 o.IntField = i;
                 o.IntProperty = 0;
                 o.StringProperty = null;
             });
-            
+
             Assert.That.These(builtObjects)
                 .HaveCount(100)
                 .Contains(e => e.StringField == "Element#1").And().Contains(e => e.StringField == "Element#100")
@@ -38,9 +39,8 @@ namespace Builder.Tests
                     .HasNonDefault(i => i.DateTimeProperty)
                     .HasNonDefault(i => i.GuidProperty)
                     .HasProperty(i => i.StringField).WhichValueStartsWith("Element#").And()
-                    .HasProperty(i => i.StringProperty).WithValue(null).And()                    
+                    .HasProperty(i => i.StringProperty).WithValue(null).And()
                     .HasProperty(i => i.IntProperty).WithValue(0);
-
         }
 
         [TestMethod]
@@ -92,6 +92,34 @@ namespace Builder.Tests
         }
 
         [TestMethod]
+        public void BuildMany_should_ignore_get_only_properties()
+        {
+            var builtObjects = Builder<SutPoco>.New().BuildMany(10);
+            Assert.That.These(builtObjects).EachElement().HasDefault(o => o.GetOnlyProperty);
+        }
+
+        [TestMethod]
+        public void BuildMany_should_ignore_private_set_properties()
+        {
+            var builtObjects = Builder<SutPoco>.New().BuildMany(10);
+            Assert.That.These(builtObjects).EachElement().HasDefault(o => o.PrivateSetProperty);
+        }
+
+        [TestMethod]
+        public void BuildMany_should_set_properties_with_private_setter_when_SetPropertiesPrivateSetters_true()
+        {
+            Builder.SetPropertiesPrivateSetters = true;
+
+            var builtObjects = Builder<SutPoco>.New().BuildMany(10);
+            Assert.That.These(builtObjects).EachElement().HasNonDefault(o => o.PrivateSetProperty);
+
+            Builder.SetPropertiesPrivateSetters = false;
+        }
+
+        #endregion
+
+        #region Build
+        [TestMethod]
         public void Build_should_ignore_get_only_properties()
         {
             var builtObject = Builder<SutPoco>.New().Build();
@@ -142,7 +170,8 @@ namespace Builder.Tests
             var expectedTimeSpanProperty = Any.TimeSpan();
             var expectedEnumProperty = Any.In<SutEnum>();
 
-            var builtObject = Builder<SutPoco>.New().Build(o => {
+            var builtObject = Builder<SutPoco>.New().Build(o =>
+            {
                 o.BoolField = expectedBoolField;
                 o.IntField = expectedIntField;
                 o.LongField = expectedLongField;
@@ -231,7 +260,7 @@ namespace Builder.Tests
                 .HasNonDefault(o => o.StringField).And()
                 .HasNonDefault(o => o.StringProperty).And()
                 .HasNonDefault(o => o.TimeSpanField).And()
-                .HasNonDefault(o => o.TimeSpanProperty).And()                
+                .HasNonDefault(o => o.TimeSpanProperty).And()
                 .HasNonDefault(o => o.EnumField).And()
                 .HasNonDefault(o => o.EnumProperty).And()
                 .HasNonDefault(o => o.EmailProperty).And()
@@ -292,7 +321,7 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.AnotherPocoField.EnumField).And()
                     .HasNonDefault(o => o.AnotherPocoField.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoField.AnotherPocoField, "With depth 1 the grandchild object is expected to be null has it has depth 2").And()
-                
+
                 .HasNonNull(o => o.AnotherPocoProperty, "With depth 1 the child object is expected to be populated").And()
                     .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
                     .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
@@ -315,7 +344,7 @@ namespace Builder.Tests
                     .HasNonDefault(o => o.AnotherPocoField.EnumField).And()
                     .HasNonDefault(o => o.AnotherPocoField.EnumProperty).And()
                     .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "With depth 1 the grandchild object is expected to be null has it has depth 2").And()
-               
+
                 .HasNonEmpty(o => o.MorePocosField).And()
                 .HasNonEmpty(o => o.MorePocosProperty).And()
                 .HasNonDefault(o => o.CharField).And()
@@ -429,7 +458,7 @@ namespace Builder.Tests
                     .HasNonNull(o => o.AnotherPocoField, "Child of an item of the collection has depth 2 and expected to be not null").And()
                         .HasNonDefault(o => o.AnotherPocoField.CharField).And()
                         .HasNonDefault(o => o.AnotherPocoField.CharProperty).And()
-                        .HasNull(o => o.AnotherPocoField.AnotherPocoField, "Grandchild of an item of the collection has depth 3 and expected to be null").And()        
+                        .HasNull(o => o.AnotherPocoField.AnotherPocoField, "Grandchild of an item of the collection has depth 3 and expected to be null").And()
                     .HasNonNull(o => o.AnotherPocoProperty, "Child of an item of the collection has depth 2 and expected to be not null").And()
                         .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
                         .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
@@ -448,48 +477,6 @@ namespace Builder.Tests
                         .HasNonDefault(o => o.AnotherPocoProperty.CharField).And()
                         .HasNonDefault(o => o.AnotherPocoProperty.CharProperty).And()
                         .HasNull(o => o.AnotherPocoProperty.AnotherPocoProperty, "Grandchild of an item of the collection has depth 3 and expected to be null");
-        }
-
-        [TestMethod]
-        public void Exclude_should_prevent_random_value_generation_for_the_excluded_members()
-        {
-            var entity = Builder<SutPoco>.New().Exclude(
-                p => p.IntField,
-                p => p.IntProperty
-                ).Build();
-
-            Assert.That.This(entity)
-                .IsNotNull().And()
-                .HasDefault(e => e.IntField).And()
-                .HasDefault(e => e.IntProperty).And()
-                .Has(e => e.LongField != 0).And()
-                .Has(e => e.LongProperty != 0);
-        }
-
-        [TestMethod]
-        public void Exclude_should_prevent_random_value_generation_for_the_excluded_members_on_hierarchy_objects()
-        {
-            var entity = Builder<SutPoco>.New().Exclude(
-                p => p.IntField,
-                p => p.IntProperty,
-                p => p.AnotherPocoProperty.IntField,
-                p => p.AnotherPocoProperty.AnotherPocoField.StringProperty
-                ).Build(2);
-
-
-            Assert.That.This(entity)
-                .IsNotNull().And()
-                // Make sure all properties excluded are using default values
-                .HasDefault(e => e.IntField).And()
-                .HasDefault(e => e.IntProperty).And()
-                .HasDefault(e => e.AnotherPocoProperty.IntField).And()
-                .HasDefault(e => e.AnotherPocoProperty.AnotherPocoField.StringProperty).And()
-                // Then just make sure we are still generating random values
-                .Has(e => e.LongField != 0).And()
-                .Has(e => e.LongProperty != 0).And()                
-                .Has(e => e.AnotherPocoProperty.LongProperty != 0).And()
-                .Has(e => e.AnotherPocoProperty.StringProperty != null).And()               
-                .Has(e => e.AnotherPocoProperty.AnotherPocoField.IntField != 0);            
         }
 
         [TestMethod]
@@ -562,5 +549,72 @@ namespace Builder.Tests
                 .HasNonDefault(t => t.Name)
                 .HasNonDefault(t => t.Surname);
         }
+
+        [TestMethod]
+        public void Builder_should_set_all_nullable_members_assigning_random_values()
+        {
+            var builtObject = Builder<SutPoco>.New().Build();
+
+            Assert.That.This(builtObject).HasNonDefault(o => o.NullableDateTime);
+            Assert.That.This(builtObject).HasNonDefault(o => o.NullableDouble);
+            Assert.That.This(builtObject).HasNonDefault(o => o.NullableEnum);
+            Assert.That.This(builtObject).HasNonDefault(o => o.NullableGuid);
+            Assert.That.This(builtObject).HasNonDefault(o => o.NullableInt);
+            Assert.That.This(builtObject).HasNonDefault(o => o.NullableTimeSpan);
+        }
+        #endregion
+
+        #region Exclude
+        [TestMethod]
+        public void Exclude_should_prevent_random_value_generation_for_the_excluded_members()
+        {
+            var entity = Builder<SutPoco>.New().Exclude(
+                p => p.IntField,
+                p => p.IntProperty
+                ).Build();
+
+            Assert.That.This(entity)
+                .IsNotNull().And()
+                .HasDefault(e => e.IntField).And()
+                .HasDefault(e => e.IntProperty).And()
+                .Has(e => e.LongField != 0).And()
+                .Has(e => e.LongProperty != 0);
+        }
+
+        [TestMethod]
+        public void Exclude_should_prevent_random_value_generation_for_the_excluded_members_on_hierarchy_objects()
+        {
+            var entity = Builder<SutPoco>.New().Exclude(
+                p => p.IntField,
+                p => p.IntProperty,
+                p => p.AnotherPocoProperty.IntField,
+                p => p.AnotherPocoProperty.AnotherPocoField.StringProperty
+                ).Build(2);
+
+
+            Assert.That.This(entity)
+                .IsNotNull().And()
+                // Make sure all properties excluded are using default values
+                .HasDefault(e => e.IntField).And()
+                .HasDefault(e => e.IntProperty).And()
+                .HasDefault(e => e.AnotherPocoProperty.IntField).And()
+                .HasDefault(e => e.AnotherPocoProperty.AnotherPocoField.StringProperty).And()
+                // Then just make sure we are still generating random values
+                .Has(e => e.LongField != 0).And()
+                .Has(e => e.LongProperty != 0).And()
+                .Has(e => e.AnotherPocoProperty.LongProperty != 0).And()
+                .Has(e => e.AnotherPocoProperty.StringProperty != null).And()
+                .Has(e => e.AnotherPocoProperty.AnotherPocoField.IntField != 0);
+        }
+        #endregion
+
+        //[TestMethod]
+        //public void From_should_return_a_copy_of_the_original_object_of_the_customization_action_is_null()
+        //{
+        //    var original = Builder<SutPoco>.New().Build();
+        //    var copy = Builder<SutPoco>.From(original).Build();
+
+            
+        //}
     }
 }

@@ -26,6 +26,12 @@ namespace AnonymousData.Tests
         public ClassForTesting[] RecursiveArray;
         public string[] StringArray;
         public ClassForTesting SameObject;
+        public DateTime? NullableDateTime { get; set; }
+        public int? NullableInt { get; set; }
+        public double? NullableDouble { get; set; }
+        public ForTesting? NullableEnum { get; set; }
+        public TimeSpan? NullableTimeSpan { get; set; }
+        public Guid? NullableGuid { get; set; }
     }
 
     public enum ForTesting
@@ -91,7 +97,7 @@ namespace AnonymousData.Tests
 
         [TestMethod]
         public void Of_should_return_type_instance_with_random_properties()
-        { 
+        {
             var randomType = Any.Of<ClassForTesting>();
 
             Assert.That.This(randomType).IsNotNull()
@@ -109,7 +115,7 @@ namespace AnonymousData.Tests
             Assert.That.These(randomType.List).IsNotNullOrEmpty();
             Assert.That.These(randomType.RecursiveArray).IsNotNullOrEmpty();
             Assert.That.These(randomType.RecursiveList).IsNotNullOrEmpty();
-            Assert.That.These(randomType.StringArray).IsNotNullOrEmpty();            
+            Assert.That.These(randomType.StringArray).IsNotNullOrEmpty();
             Assert.That.These(randomType.Dictionary).IsNotNullOrEmpty();
 
             Assert.That.These(randomType.ConcurrentList).IsNotNull();
@@ -183,7 +189,14 @@ namespace AnonymousData.Tests
                 .And().HasNonDefault(e => e.RecursiveList)
                 .And().HasNonDefault(e => e.RecursiveArray)
                 .And().HasNonDefault(e => e.StringArray)
-                .And().HasNonDefault(e => e.List);
+                .And().HasNonDefault(e => e.List)
+                .And().HasNonDefault(o => o.NullableDateTime)
+                .And().HasNonDefault(o => o.NullableDouble)
+                .And().HasNonDefault(o => o.NullableEnum)
+                .And().HasNonDefault(o => o.NullableGuid)
+                .And().HasNonDefault(o => o.NullableInt)
+                .And().HasNonDefault(o => o.NullableTimeSpan);
+
 
             var classForTesting = (ClassForTesting)randomType;
             Assert.That.These(classForTesting.List).IsNotNullOrEmpty();
@@ -240,7 +253,7 @@ namespace AnonymousData.Tests
         {
             var options = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
             var result = Any.In("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
-            Assert.IsTrue(options.Contains(result));            
+            Assert.IsTrue(options.Contains(result));
         }
 
         [TestMethod]
@@ -292,7 +305,7 @@ namespace AnonymousData.Tests
             }
         }
         #endregion
-        
+
         #region String
         [DataRow("d5f43g", 10)]
         [DataRow("4g2g4", 16)]
@@ -334,9 +347,9 @@ namespace AnonymousData.Tests
         {
             var anonymousString = Any.String(length: 1000, charSet: CharSet.UTF16);
 
-            foreach(var currentChar in anonymousString.ToCharArray())
+            foreach (var currentChar in anonymousString.ToCharArray())
             {
-                if(currentChar > 255) return;
+                if (currentChar > 255) return;
             }
 
             Assert.Fail("No UTF characters found int the result string");
@@ -418,23 +431,64 @@ namespace AnonymousData.Tests
         public void Timespan_invoked_with_no_arguments_returns_a_TimeSpan_for_maximum_10_days()
         {
             var tenDaysTimeSpan = new TimeSpan(10, 0, 0, 0);
-            for(int i = 0; i < 100000; i++)
+            for (int i = 0; i < 100000; i++)
             {
                 Assert.IsTrue(tenDaysTimeSpan >= Any.TimeSpan());
             }
         }
 
-        [DataRow(100,0,0,0)]
-        [DataRow(1,1,1,1)]
-        [DataRow(0,0,0,1)]
-        [DataRow(0,0,5,0)]
-        [DataRow(0,3,0,0)]
+        [DataRow(100, 0, 0, 0)]
+        [DataRow(1, 1, 1, 1)]
+        [DataRow(0, 0, 0, 1)]
+        [DataRow(0, 0, 5, 0)]
+        [DataRow(0, 3, 0, 0)]
         [DataTestMethod]
         public void Timespan_invoked_with_limits_should_return_a_TimeSpan_not_longer_than_specified_limits(int days, int hours, int minutes, int seconds)
         {
             var tenDaysTimeSpan = new TimeSpan(days, hours, minutes, seconds);
             for (int i = 0; i < 1000000; i++)
                 Assert.IsTrue(tenDaysTimeSpan >= Any.TimeSpan(days, hours, minutes, seconds));
+        }
+        #endregion
+
+        #region Unique
+        [TestMethod]
+        public void Unique_int_should_return_1000_unique_values_using_default_int_generation()
+        {
+            var generatedInts = new List<int>();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                var generated = Any.Unique.Int();
+                Assert.That.These(generatedInts).DoesNotContain(generated);
+                generatedInts.Add(generated);
+            }
+        }
+
+        [TestMethod]
+        public void Unique_int_should_return_5000_unique_values_using_default_int_generation_for_10000_times_resetting()
+        {
+            for (int iterations = 0; iterations < 10000; iterations++) {
+                var generatedInts = new List<int>();
+
+                for (int i = 0; i < 1000; i++)
+                {
+                    var generated = Any.Unique.Int();
+                    Assert.That.These(generatedInts).DoesNotContain(generated);
+                    generatedInts.Add(generated);
+                }
+
+                Any.ResetUniqueValues();
+            }            
+        }
+
+        [TestMethod]
+        public void Unique_int_should_throw_exception_when_unable_to_find_enough_uniques_after_10000_retries()
+        {
+            Assert.ThrowsException<Exception>(() =>
+            {
+                for (int i = 0; i < 10000; i++) { Any.Unique.Int(minValue: 1, maxValue: 10000); }
+            }, "Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider lenght, ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
         }
         #endregion
     }

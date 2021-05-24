@@ -25,7 +25,8 @@ namespace Builder
         public CharSet DefaultStringCharSet = CharSet.Alphanumeric;
         internal Operation CurrentOperation = Operation.Default;
         internal IEnumerable<string> Exclusions;
-        
+        internal TE CopyFrom = null;
+
         public static Builder<TE> New()
         {
             try
@@ -51,6 +52,12 @@ namespace Builder
             CurrentOperation = operation;
             return this;
         }
+
+        // Feature not ready
+        //public static BuildFrom<TE> From(TE source)
+        //{
+        //    return new BuildFrom<TE>(source);
+        //}
 
         protected Builder<TE> Exclude(List<string> exclusions)
         {
@@ -218,40 +225,40 @@ namespace Builder
                 return Any.String(propertyName, 15 + propertyName.Length, DefaultStringCharSet);
             }
 
-            if (type == typeof(int) || type == typeof(uint))
+            if (type == typeof(int) || type == typeof(uint) || type == typeof(Nullable<int>) || type == typeof(Nullable<uint>))
                 return (object)Any.Int(3, false);
 
             if (type == typeof(string))
                 return Any.String(length: 15, charSet: DefaultStringCharSet);
 
-            if (type == typeof(sbyte) || type == typeof(byte))
+            if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(Nullable<sbyte>) || type == typeof(Nullable<byte>))
                 return (object)Any.Byte();
 
-            if (type == typeof(short) || type == typeof(ushort))
+            if (type == typeof(short) || type == typeof(ushort) || type == typeof(Nullable<short>) || type == typeof(Nullable<ushort>))
                 return (object)Any.Short();
 
-            if (type == typeof(long) || type == typeof(ulong))
+            if (type == typeof(long) || type == typeof(ulong) || type == typeof(Nullable<long>) || type == typeof(Nullable<ulong>))
                 return (object)Any.Long();
 
-            if (type == typeof(double))
+            if (type == typeof(double) || type == typeof(Nullable<double>))
                 return (object)Any.Double();
 
-            if (type == typeof(decimal))
+            if (type == typeof(decimal) || type == typeof(Nullable<decimal>))
                 return (object)Any.Decimal();
 
-            if (type == typeof(float))
+            if (type == typeof(float) || type == typeof(Nullable<float>))
                 return (object)Any.Float();
 
-            if (type == typeof(char))
+            if (type == typeof(char) || type == typeof(Nullable<char>))
                 return (object)Any.Char(DefaultStringCharSet);
 
-            if (type == typeof(DateTime))
+            if (type == typeof(DateTime) || type == typeof(Nullable<DateTime>))
                 return (object)Any.DateTime();
 
-            if (type == typeof(TimeSpan))
+            if (type == typeof(TimeSpan) || type == typeof(Nullable<TimeSpan>))
                 return (object)Any.TimeSpan();
 
-            if (type == typeof(Guid))
+            if (type == typeof(Guid) || type == typeof(Nullable<Guid>))
                 return (object)Any.Guid();
 
             if (type == typeof(Uri))
@@ -270,6 +277,13 @@ namespace Builder
             {
                 var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(type).Length - 1);
                 return (object)Enum.GetValues(type).GetValue(randomIndex);
+            }
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && type.GetGenericArguments()[0].IsEnum)
+            {
+                var enumType = type.GenericTypeArguments.First();
+                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(enumType).Length - 1);
+                return (object)Enum.GetValues(enumType).GetValue(randomIndex);
             }
 
             // Handle IEnumerable members if the hierarchy depth has been set

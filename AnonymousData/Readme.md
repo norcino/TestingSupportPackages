@@ -9,30 +9,44 @@ This library through the class _Any_, aims to help you and your team write clear
 ## Supported types
 The following types are supported for generation:
 
-|Type|Lenght Limit|Other options|
-|---|:---:|---|
-|Bool||
-|Byte||
-|Char||CharSet|
-|DateTime|✔|Future|
-|Decimal|✔||
-|Double|✔||
-|Enum|||
-|Float|✔||
-|Guid|
-|Int|✔|Allow Zero, Positive, Range|
-|Long||Positive|
-|Object||
-|SByte||
-|Short||
-|String|✔|Prefix, CharSet|
-|TimeSpan|✔||
-|Uri||Protocol|
-|Url||Protocol|
+|Type|Lenght Limit|Unique|Other options|
+|---|:---:|:---:|---|
+|Base64String|✔||Prefix, CharSet|
+|Bool|||
+|Byte|||
+|Char|||CharSet|
+|DateTime|✔||Future|
+|Decimal|✔|||
+|Double|✔|||
+|Enum||||
+|Float|✔|||
+|Guid||||
+|Int|✔|✔|Allow Zero, Positive, Range|
+|Long|||Positive|
+|Object|||
+|SByte|||
+|Short|||
+|String|✔||Prefix, CharSet|
+|TimeSpan|✔|||
+|Uri|||Protocol|
+|Url|||Protocol|
 
 For all types it is possible to configure the exclusion of the default value of the given type.
 
 ## Extra features
+
+### Unique values
+When working in a test you could need to enforce that certain values are yes anonymous but also unique, for example when setting up a mocked repository which is returning different entities for different IDs.
+In order to force the generation of unique values you can use:
+````
+var uniqueId = Any.Unique.Int();
+
+// Execute reset at test teardown to free memory and help generation speed
+Any.ResetUniqueValues();
+````
+The use of random generation has implications which can affect performance and can even leade to memory issues. When requesting for unique values, always make sure that the set from which the values needs to be generated, is long enough to be lucky to get the first available value in a timely manner.
+For example generating a unique integer from a range of 100000, is going to be safe and quick, but if you require 10000 unique intergers, you might start experiencing delays and even failures.
+The unique generation mecanishm has a failsafe which aborts the generation and throws an exception if no random value was found in 10000 iterations.
 
 ### An element in a list
 Any supports the random selection of an option from a given list of options. These can be passed as an _IEnumberable_ or as a list of parameters.
@@ -49,14 +63,32 @@ Similar but alternative option is to provide a list of parameters as follows:
 var aWeekDay = Any.Of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
 ````
 
-### An email
-Extending the capability of _Any.String()_ it is possible to have a valid formatted email address.
-````
-// Possible results: any email address with the format {any_string}@{any_string}.any
-var email = Any.Email();
-````
-
 ## Usage
+
+### Base64String
+Generate a Base64 string of 15 characters
+````
+// Possible results: Any Base64 string from a string with 15 characters length
+var aString = Any.Base64String();
+
+// Possible results: Any Base64 string from a string with a length of 15 UTF-16 characters
+var aUTFString = Any.Base64String(charSet: CharSet.UTF16);
+````
+Generate a Base64 string from a string with the given length
+````
+// Possible results: Any Base64 string from a string with 6 characters length
+var aString = Any.Base64String(6);
+````
+Generate a Base64 string, from a stringwith the given length and prefix
+````
+// Possible results: Any string of a length of 10 characters starting with "Name_"
+var aString = Any.Base64String("Name_", 10);
+````
+Strings can be generated using one the following __CharSet__:
+- ASCII
+- UTF16
+- Alphanumeric
+The default is Alphanumeric
 
 ### Bool
 Get a random boolean
@@ -149,6 +181,13 @@ Get a decimal with maximum 2 integer digits and 4 decimal digits
 var aLimitedDouble = Any.Double(2,4);
 ````
 
+### An email
+Extending the capability of _Any.String()_ it is possible to have a valid formatted email address.
+````
+// Possible results: any email address with the format {any_string}@{any_string}.any
+var email = Any.Email();
+````
+
 ### Float
 Get a random float value with by default up to 4 integer digits and 2 decimals
 ````
@@ -228,20 +267,20 @@ var aSByte = Any.SByte();
 ### String
 Generate a string of 15 characters
 ````
-// Possible results: Any string of a lenght of 15 characters
+// Possible results: Any string of a length of 15 characters
 var aString = Any.String();
 
-// Possible results: Any string with a lenght of 15 UTF-16 characters
+// Possible results: Any string with a length of 15 UTF-16 characters
 var aUTFString = Any.String(charSet: CharSet.UTF16);
 ````
-Generate a string with the given lenght
+Generate a string with the given length
 ````
-// Possible results: Any string of a lenght of 6 characters
+// Possible results: Any string of a length of 6 characters
 var aString = Any.String(6);
 ````
-Generate a string with the given lenght and prefix
+Generate a string with the given length and prefix
 ````
-// Possible results: Any string of a lenght of 10 characters starting with "Name_"
+// Possible results: Any string of a length of 10 characters starting with "Name_"
 var aString = Any.String("Name_", 10);
 ````
 Strings can be generated using one the following __CharSet__:

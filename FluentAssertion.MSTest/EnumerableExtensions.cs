@@ -251,7 +251,15 @@ namespace FluentAssertion.MSTest
             Assert.IsFalse(assertCollection.Collection.Any(assertions), $"Expected to not contain any item matching the assertion");
             return assertCollection;
         }
-        
+
+        public static AssertCollection<T> DoesNotContain<T>(this AssertCollection<T> assertCollection, T element)
+        {
+            if (assertCollection.Collection.Contains(element))
+                Assert.Fail($"Expected {element} to not be contained in the collaction, but it was");
+
+            return assertCollection;
+        }
+
         public static AssertCollection<T> Have<T>(this AssertCollection<T> assertCollection, Func<T, bool> assertions)
         {
             return Are(assertCollection, assertions);
@@ -350,16 +358,24 @@ namespace FluentAssertion.MSTest
             {
                 var propertyInfo = GetMemberInfoFromExpression(property);
                 var value = property.Compile()(collectionItem);
-                if (!value.Equals(default(P)))
+
+                if (default(P) == null && value == null) continue;
+
+                if (!default(P).Equals(value))
                 {
                     Assert.Fail(message ?? $"Expected property '{propertyInfo.Name}' value [{value}] to be the default value [{default(P)}]");
                 }
             }
             return assertEachItem;
-        }        
+        }
         #endregion
 
         #region Each Item Property Assertions
+        public static AssertEachItem<T> EachElement<T>(this AssertCollection<T> assertCollection)
+        {
+            return new AssertEachItem<T>(assertCollection);
+        }
+
         public static AssertEachItemProperty<T, TP> WithValue<T, TP>(this AssertEachItemProperty<T, TP> assertProperty, TP value)
         {
             int iterationIndex = 1;

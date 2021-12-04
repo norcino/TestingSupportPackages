@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -10,12 +10,12 @@
     <PackageProjectUrl>https://github.com/norcino/TestingSupportPackages/tree/master/Builder</PackageProjectUrl>
     <PackageIcon>Logo128.png</PackageIcon>
     <PackageTags>test, testing, stub, mock, factory, builder, instance</PackageTags>
-    <PackageReleaseNotes>Added support to set Nullable&lt;T&gt; with a random value of T</PackageReleaseNotes>
+    <PackageReleaseNotes>Changed ToList helper method has been renamed in AsList to avoid clashes with the omonimous Linq extension method.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.1.2</Version>
-    <AssemblyVersion>1.1.2.0</AssemblyVersion>
-    <FileVersion>1.1.2.0</FileVersion>
+    <Version>1.1.4</Version>
+    <AssemblyVersion>1.1.4.0</AssemblyVersion>
+    <FileVersion>1.1.4.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

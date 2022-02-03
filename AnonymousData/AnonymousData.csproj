@@ -16,7 +16,14 @@ A known issue with developers struggling with test data setup, is that often the
 	<Version>1.1.1</Version>
 	<AssemblyVersion>1.1.1.0</AssemblyVersion>
 	<FileVersion>1.1.1.0</FileVersion>
+	<SignAssembly>true</SignAssembly>
+	<DelaySign>false</DelaySign>
+	<AssemblyOriginatorKeyFile>projectSigningKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="projectSigningKey.snk" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="Logo128.png">

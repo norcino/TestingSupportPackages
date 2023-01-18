@@ -70,7 +70,7 @@ namespace AnonymousData
         /// <param name="allowZero">True by default allows zero as result</param>
         /// <param name="onlyPositive">True by default allows only postive integers including zero</param>
         /// <param name="minValue">Minimum value of the range</param>
-        /// <param name="maxValue">Maximum value of the range (This has priority over lenght)</param>
+        /// <param name="maxValue">Maximum value of the range (This has priority over length)</param>
         /// <returns>Random integer number</returns>
         public int Int(int maxLength = 5, bool allowZero = true, bool onlyPositive = true, int? minValue = null, int? maxValue = null)
         {
@@ -82,7 +82,7 @@ namespace AnonymousData
                 (minValue.HasValue && int.MaxValue - minValue.Value < 10000))
                     throw new ArgumentOutOfRangeException($"It is not possible to specify a range smaller than 10000 when requesting Unique values");
                         
-            return Any.Int(maxLength, allowZero, onlyPositive, minValue, maxValue);
+            return Any.UniqueInt(maxLength, allowZero, onlyPositive, minValue, maxValue);
         }       
     }
 }

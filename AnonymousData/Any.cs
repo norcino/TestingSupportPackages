@@ -58,7 +58,7 @@ namespace AnonymousData
         }
         #endregion
 
-        private static Func<int, int, int> GenerateRandomIntValueHandlingUniqueness = (int mi, int ma) =>
+        private static Func<bool, int, int, int> GenerateRandomIntValueHandlingUniqueness = (bool unique, int mi, int ma) =>
         {
             const int MaximumRetryIterations = 10000;
             int result;
@@ -67,7 +67,7 @@ namespace AnonymousData
             int iterations = 0;
             do
             {
-                if (anyUnique != null)
+                if (unique)
                 {
                     result = anyUnique.TryGetUniqueValue(Random().Next(mi, ma), out notUnique);
                 }
@@ -77,7 +77,7 @@ namespace AnonymousData
                 }
 
                 if (++iterations >= MaximumRetryIterations)
-                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider lenght, "+
+                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider length, " +
                         "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
             }
             while (notUnique);
@@ -110,11 +110,22 @@ namespace AnonymousData
         /// <param name="allowZero">True by default allows zero as result</param>
         /// <param name="onlyPositive">True by default allows only postive integers including zero</param>
         /// <param name="minValue">Minimum value of the range</param>
-        /// <param name="maxValue">Maximum value of the range (This has priority over lenght)</param>
+        /// <param name="maxValue">Maximum value of the range (This has priority over length)</param>
         /// <returns>Random integer number</returns>
+        internal static int UniqueInt(int maxLength = 5, bool allowZero = true, bool onlyPositive = true, int? minValue = null, int? maxValue = null)
+        {
+            return GenerateRandomInt(maxLength, ref allowZero, onlyPositive, minValue, maxValue, true);
+        }
+
         public static int Int(int maxLength = 5, bool allowZero = true, bool onlyPositive = true, int? minValue = null, int? maxValue = null)
         {
-            if (_doNotAcceptDefaultValues) allowZero = false;
+            return GenerateRandomInt(maxLength, ref allowZero, onlyPositive, minValue, maxValue, false);
+        }
+
+        private static int GenerateRandomInt(int maxLength, ref bool allowZero, bool onlyPositive, int? minValue, int? maxValue, bool unique)
+        {
+            if (_doNotAcceptDefaultValues)
+                allowZero = false;
 
             var max = maxValue ?? int.MaxValue;
             var min = minValue ?? int.MinValue;
@@ -127,27 +138,29 @@ namespace AnonymousData
 
             if (maxValue.HasValue && minValue.HasValue)
             {
-                return GenerateRandomIntValueHandlingUniqueness(minValue.Value, maxValue.Value);
+                return GenerateRandomIntValueHandlingUniqueness(unique, minValue.Value, maxValue.Value);
             }
 
-            var maxValueForLenght = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
+            var maxValueForLength = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
             if (minValue.HasValue)
             {
-                return GenerateRandomIntValueHandlingUniqueness(minValue.Value, maxValueForLenght);
+                return GenerateRandomIntValueHandlingUniqueness(unique, minValue.Value, maxValueForLength);
             }
 
             if (maxValue.HasValue)
             {
                 var minimum = int.MinValue;
-                if (onlyPositive) minimum = 0;
-                if (!allowZero) minimum = 1;
-                return GenerateRandomIntValueHandlingUniqueness(minimum, maxValue.Value);
+                if (onlyPositive)
+                    minimum = 0;
+                if (!allowZero)
+                    minimum = 1;
+                return GenerateRandomIntValueHandlingUniqueness(unique, minimum, maxValue.Value);
             }
 
             if (onlyPositive)
-                return GenerateRandomIntValueHandlingUniqueness(allowZero ? 0 : 1, maxValueForLenght);
+                return GenerateRandomIntValueHandlingUniqueness(unique, allowZero ? 0 : 1, maxValueForLength);
 
-            return GenerateRandomIntValueHandlingUniqueness(min, max);
+            return GenerateRandomIntValueHandlingUniqueness(unique, min, max);
         }
 
         /// <summary>
@@ -160,13 +173,13 @@ namespace AnonymousData
         /// var expectedResult = Any.String();
         /// </code>
         /// <example>
-        /// Get a random string of lenght 10
+        /// Get a random string of length 10
         /// </example>
         /// <code>
         /// var expectedResult = Any.String(10);
         /// </code>
         /// <example>
-        /// Get a random string of lenght 10 with prefix Name_
+        /// Get a random string of length 10 with prefix Name_
         /// </example>
         /// <code>
         /// var expectedResult = Any.String(10, "Name_");
@@ -187,7 +200,7 @@ namespace AnonymousData
                 throw new ArgumentOutOfRangeException($"{nameof(length)} must be greater than zero");
 
             if (length < prefix.Length)
-                throw new ArgumentOutOfRangeException($"{nameof(length)} should be greater then the lenght of the given {nameof(prefix)}");
+                throw new ArgumentOutOfRangeException($"{nameof(length)} should be greater then the length of the given {nameof(prefix)}");
 
             var characters = new char[length];
             for (int idx = 0; idx < length; idx++)
@@ -305,16 +318,16 @@ namespace AnonymousData
         /// Generate random double with integer part made of 4 digits and decimal part made of 2 digits.
         /// The number of digits for integer and decimal part can be customized.
         /// </summary>
-        /// <param name="integerLenght">Number of digits of the integer part of the result</param>
+        /// <param name="integerLength">Number of digits of the integer part of the result</param>
         /// <param name="decimalLenght">Number of digits of the decimal part of the result</param>
         /// <returns>Double value</returns>
-        public static double Double(int integerLenght = 4, int decimalLenght = 2)
+        public static double Double(int integerLength = 4, int decimalLength = 2)
         {
             var randomDouble = Random().NextDouble();
-            var result = ((double)Any.Int(integerLenght)) + Math.Round(randomDouble, decimalLenght);
+            var result = ((double)Any.Int(integerLength)) + Math.Round(randomDouble, decimalLength);
             
             if (_doNotAcceptDefaultValues && default(double) == result)
-                return Double(integerLenght, decimalLenght);
+                return Double(integerLength, decimalLength);
 
             return result;
         }
@@ -323,17 +336,17 @@ namespace AnonymousData
         /// Generate random decimal with integer part made of up to 4 digits and decimal part made of 2 digits.
         /// The number of digits for integer and decimal part can be customized.
         /// </summary>
-        /// <param name="integerLenght">Number of digits of the integer part of the result</param>
-        /// <param name="decimalLenght">Number of digits of the decimal part of the result</param>
+        /// <param name="integerLength">Number of digits of the integer part of the result</param>
+        /// <param name="decimalLength">Number of digits of the decimal part of the result</param>
         /// </summary>
         /// <returns>Decimal value</returns>
-        public static decimal Decimal(int integerLenght = 4, int decimalLenght = 2)
+        public static decimal Decimal(int integerLength = 4, int decimalLength = 2)
         {
             var randomDecimal = (decimal)Random().NextDouble();
-            var result = ((decimal)Any.Int(integerLenght)) + Math.Round(randomDecimal, decimalLenght);
+            var result = ((decimal)Any.Int(integerLength)) + Math.Round(randomDecimal, decimalLength);
 
             if (_doNotAcceptDefaultValues && default(decimal) == result)
-                return Decimal(integerLenght, decimalLenght);
+                return Decimal(integerLength, decimalLength);
 
             return result;
         }
@@ -342,17 +355,17 @@ namespace AnonymousData
         /// Generate a random float with integer part made of 4 digits and decimal part made of 2 digits.
         /// The number of digits for integer and decimal part can be customized.
         /// </summary>
-        /// <param name="integerLenght">Number of digits of the integer part of the result</param>
-        /// <param name="decimalLenght">Number of digits of the decimal part of the result</param>
+        /// <param name="integerLength">Number of digits of the integer part of the result</param>
+        /// <param name="decimalLength">Number of digits of the decimal part of the result</param>
         /// </summary>
         /// <returns>Float value</returns>
-        public static float Float(int integerLenght = 4, int decimalLenght = 2)
+        public static float Float(int integerLength = 4, int decimalLength = 2)
         {
             var randomFloat = (float)Random().NextDouble();
-            var result = ((float)Any.Int(integerLenght)) + (float)Math.Round(randomFloat, decimalLenght);
+            var result = ((float)Any.Int(integerLength)) + (float)Math.Round(randomFloat, decimalLength);
 
             if (_doNotAcceptDefaultValues && default(float) == result)
-                return Float(integerLenght, decimalLenght);
+                return Float(integerLength, decimalLength);
 
             return result;
         }
@@ -603,7 +616,7 @@ namespace AnonymousData
         }
 
         /// <summary>
-        /// Gets an enumeration of objects from which one will be randomly selected
+        /// Gets an enumerable of objects from which one will be randomly selected
         /// </summary>
         /// <typeparam name="T">Type of objects to be seleted</typeparam>
         /// <param name="options">List of options to select from</param>
@@ -613,6 +626,30 @@ namespace AnonymousData
             if (options == null || !options.Any()) return default;
             var index = Int(allowZero: true, maxValue: options.Count()-1);
             return options.ElementAt(index);
+        }
+
+        /// <summary>
+        /// Generate a random value excluding the list of exclusions
+        /// </summary>
+        /// <typeparam name="T">Type of the object to be generated</typeparam>
+        /// <param name="exclusions">List of values to be excluded</param>
+        /// <returns>A randomly generated value not in the exclusion list</returns>
+        public static T NotIn<T>(IEnumerable<T> exclusions)
+        {
+            var retry = 10000;
+            if (exclusions == null || !exclusions.Any())
+                return Any.Of<T>();
+
+            var result = Any.Of<T>();
+
+            while (exclusions.Contains(result) && retry >= 0)
+            {
+                if (retry==0)
+                throw new Exception("Exceeded the number of retry available to find a value outside of the exclusion list, use this feature wisely and consider length, " +
+                    "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -699,7 +736,7 @@ namespace AnonymousData
         {
             _doNotAcceptDefaultValues = excludeDefaultValues;
         }
-                
+
         /// <summary>
         /// Generates the Base64 string from a random string, with an optional prefix and a random suffix of the desired length
         /// <example>
@@ -709,13 +746,13 @@ namespace AnonymousData
         /// var expectedResult = Any.Base64String();
         /// </code>
         /// <example>
-        /// Get a random Base64 string with the original string of lenght 10
+        /// Get a random Base64 string with the original string of length 10
         /// </example>
         /// <code>
         /// var expectedResult = Any.Base64String(10);
         /// </code>
         /// <example>
-        /// Get a random Base64 string, using a string of lenght 10 with prefix Name_
+        /// Get a random Base64 string, using a string of length 10 with prefix Name_
         /// </example>
         /// <code>
         /// var expectedResult = Any.Base64String(10, "Name_");
@@ -736,6 +773,7 @@ namespace AnonymousData
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(String(prefix, length, charSet)));
         }
         #region Private methods
+
         /// <summary>
         /// Generates all properties for an object
         /// </summary>

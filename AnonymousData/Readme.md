@@ -9,7 +9,7 @@ This library through the class _Any_, aims to help you and your team write clear
 ## Supported types
 The following types are supported for generation:
 
-|Type|Lenght Limit|Unique|Other options|
+|Type|Length Limit|Unique|Other options|
 |---|:---:|:---:|---|
 |Base64String|✔||Prefix, CharSet|
 |Bool|||
@@ -30,6 +30,8 @@ The following types are supported for generation:
 |TimeSpan|✔|||
 |Uri|||Protocol|
 |Url|||Protocol|
+|In||||
+|NotIn||||
 
 For all types it is possible to configure the exclusion of the default value of the given type.
 
@@ -53,7 +55,15 @@ Any supports the random selection of an option from a given list of options. The
 ````
 // Possible results: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday ]
 var weekDays = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-var aWeekDay = Any.In(options);
+var aWeekDay = Any.In(weekDays);
+````
+
+### A random value not in a list of exclusions
+Any supports the generation of a random value which won't match any of the values contained in the exclusion list. These can be passed as an _IEnumberable_ or as a list of parameters.
+````
+// Possible results: [Sunday ]
+var excludeFals = new List<bool> { false };
+var alwaysTrue = Any.NotIn(exclusions);
 ````
 
 ### An element of a list of parameters
@@ -339,3 +349,18 @@ Generate an instance of type T with random properties and fields values
 var randomObject = Any.Of<MyType>();
 ````
 NOTE: for a proper Object generation, take a look at the package "*Object.Builder*".
+
+# Changelog
+
+## Version 1.2.0 - 18/01/2023
+
+### Bugfix
+Using `Any.Unique.Int()` was causing any subsequent request implicitly using `Any.Int()`, to also use the _Unique_ contraint, which could have lead to exceptions being thrown if the library was running out of valid random integers not previously generated.
+
+### Breaking changes
+None
+
+### Added features
+NotIn options as been added to let you generate a random value which is not contained in the list of exclusions.
+The returned type is the same generic type of the list of exclusions passed to the method.
+For example if you have a set of strings or integers you don't want to randomly generate, you can use this method.

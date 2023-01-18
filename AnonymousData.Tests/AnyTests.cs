@@ -233,6 +233,20 @@ namespace AnonymousData.Tests
         }
 
         [TestMethod]
+        public void In_should_retun_random_element_in_the_list_of_parameters_executing_many_times_without_clashing_with_unique()
+        {
+            var _ = Any.Unique.Int();
+
+            var options = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+            for (var i = 0; i < 10000; i++)
+            {
+                var result = Any.In<string>(options);
+                Assert.IsTrue(options.Contains(result));
+            }
+        }
+
+        [TestMethod]
         public void In_should_retun_the_provided_option_if_only_one_available()
         {
             var options = new List<string> { "OnlyOne" };
@@ -244,6 +258,49 @@ namespace AnonymousData.Tests
         public void In_should_not_throw_if_nothing_is_provided()
         {
             Any.In((IEnumerable<string>)null);
+        }
+        #endregion
+
+        #region NotIn
+        [TestMethod]
+        public void NotIn_should_not_return_any_Int_if_in_the_exclusion_list()
+        {
+            var exclusions = new List<int> { Any.Int(), Any.Int(), Any.Int(), Any.Int(), Any.Int(), Any.Int(), Any.Int(), Any.Int() };
+
+            for (int i = 0; i < 100000; i++)
+            {
+                Assert.IsFalse(exclusions.Contains(Any.NotIn(exclusions)));
+            }
+        }
+
+        [TestMethod]
+        public void NotIn_should_not_return_any_String_if_in_the_exclusion_list()
+        {
+            var exclusions = new List<string> { Any.String(), Any.String(), Any.String(), Any.String(), Any.String(), Any.String(), Any.String(), Any.String() };
+
+            for (int i = 0; i < 100000; i++)
+            {
+                Assert.IsFalse(exclusions.Contains(Any.NotIn(exclusions)));
+            }
+        }
+
+        [TestMethod]
+        public void NotIn_should_not_return_any_DateTime_if_in_the_exclusion_list()
+        {
+            var exclusions = new List<ForTesting> { ForTesting.Yes, ForTesting.Just, ForTesting.Testing };
+
+            for (int i = 0; i < 1000; i++)
+            {
+                Assert.IsFalse(Any.NotIn(exclusions) == ForTesting.For);
+            }
+        }
+
+        [TestMethod]
+        public void NotIn_should_not_return_any_Bool_if_in_the_exclusion_list()
+        {
+            for (int i = 0; i < 10000; i++) {
+                Assert.IsFalse(Any.NotIn(new List<bool> { true }));
+            }
         }
         #endregion
 
@@ -302,6 +359,17 @@ namespace AnonymousData.Tests
                 var randomInt = Any.Int(maximumDigits);
                 Assert.IsTrue(randomInt.ToString().Length <= maximumDigits,
                     $"Expected {maximumDigits} but the value {randomInt} had {randomInt.ToString().Length} digits");
+            }
+        }
+        #endregion
+
+        #region Long
+        [TestMethod]
+        public void Long_should_allow_to_specify_the_maximum_number_of_digits_the_returned_int_should_be_made_of()
+        {
+            for (int i = 0; i < 1000000; i++)
+            {
+                var _ = Any.Long();
             }
         }
         #endregion
@@ -488,7 +556,7 @@ namespace AnonymousData.Tests
             Assert.ThrowsException<Exception>(() =>
             {
                 for (int i = 0; i < 10000; i++) { Any.Unique.Int(minValue: 1, maxValue: 10000); }
-            }, "Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider lenght, ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+            }, "Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider length, ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
         }
         #endregion
     }

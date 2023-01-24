@@ -34,56 +34,17 @@ namespace AnonymousData
                 typeof(StringBuilder)
             };
 
-        #region Unique values feature
-        private static AnyUnique anyUnique;
-        /// <summary>
-        /// Guarantee that the value returned in the following method is unique.
-        /// To avoid memory leaks consider calling Any.DisposeDefaultValues() when the unicity scope terminates, for example on a test teardown.
-        /// </summary>
-        /// <returns>Any instance which handles unique values</returns>
-        public static AnyUnique Unique { get
-            {
-                if (anyUnique == null)
-                {
-                    anyUnique = new AnyUnique();
-                }
-
-                return anyUnique;
-            }
+        #region Collections
+        public static AnyList ListOf(int? number = default)
+        {            
+            return new AnyList(number ?? Any.Int(minValue: 1, maxValue: 30));
         }
 
-        public static void ResetUniqueValues()
+        public static AnyArray ArrayOf(int? number = default)
         {
-            anyUnique = null;
+            return new AnyArray(number ?? Any.Int(minValue: 1, maxValue: 30));
         }
         #endregion
-
-        private static Func<int, int, int> GenerateRandomIntValueHandlingUniqueness = (int mi, int ma) =>
-        {
-            const int MaximumRetryIterations = 10000;
-            int result;
-            bool notUnique = false;
-
-            int iterations = 0;
-            do
-            {
-                if (anyUnique != null)
-                {
-                    result = anyUnique.TryGetUniqueValue(Random().Next(mi, ma), out notUnique);
-                }
-                else
-                {
-                    result = Random().Next(mi, ma);
-                }
-
-                if (++iterations >= MaximumRetryIterations)
-                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider lenght, "+
-                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
-            }
-            while (notUnique);
-
-            return result;
-        };
 
         /// <summary>
         /// Random number is generated with the specified maximum length of digits
@@ -265,9 +226,9 @@ namespace AnonymousData
         /// var expectedResult = Any.Short();
         /// </code>
         /// <returns>Random short value</returns>
-        public static short Short()
+        public static short Short(short? minValue = null, short? maxValue = null)
         {
-            var result = (short)Random().Next(short.MinValue, short.MaxValue);
+            var result = (short)Random().Next(minValue ?? short.MinValue, maxValue ??short.MaxValue);
 
             if (_doNotAcceptDefaultValues && default(short) == result)
                 return Short();
@@ -375,10 +336,7 @@ namespace AnonymousData
         /// </code>
         /// <param name="maximumDays"></param>
         /// <returns></returns>
-        public static TimeSpan TimeSpan(int? maximumDays = null,
-            int? maximumHours = null,
-            int? maximumMinutes = null,
-            int? maximumSeconds = null)
+        public static TimeSpan TimeSpan(int? maximumDays = null, int? maximumHours = null, int? maximumMinutes = null, int? maximumSeconds = null)
         {
             if (maximumDays > 1000) throw new ArgumentOutOfRangeException("The supported maximum days is 1000");
             if (maximumMinutes > 59) throw new ArgumentOutOfRangeException("The supported maximum minutes is 59");
@@ -735,7 +693,62 @@ namespace AnonymousData
         {
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(String(prefix, length, charSet)));
         }
-        #region Private methods
+
+        #region Unique feature
+        /// <summary>
+        /// Guarantee that the value returned in the following method is unique.
+        /// To avoid memory leaks consider calling Any.DisposeDefaultValues() when the unicity scope terminates, for example on a test teardown.
+        /// </summary>
+        /// <returns>Any instance which handles unique values</returns>
+        public static AnyUnique Unique
+        {
+            get
+            {
+                if (anyUnique == null)
+                {
+                    anyUnique = new AnyUnique();
+                }
+
+                return anyUnique;
+            }
+        }
+
+        public static void ResetUniqueValues()
+        {
+            anyUnique = null;
+        }
+        #endregion
+
+        #region Private methods        
+        private static AnyUnique anyUnique;        
+
+        private static Func<int, int, int> GenerateRandomIntValueHandlingUniqueness = (int mi, int ma) =>
+        {
+            const int MaximumRetryIterations = 10000;
+            int result;
+            bool notUnique = false;
+
+            int iterations = 0;
+            do
+            {
+                if (anyUnique != null)
+                {
+                    result = anyUnique.TryGetUniqueValue(Random().Next(mi, ma), out notUnique);
+                }
+                else
+                {
+                    result = Random().Next(mi, ma);
+                }
+
+                if (++iterations >= MaximumRetryIterations)
+                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider lenght, " +
+                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+            }
+            while (notUnique);
+
+            return result;
+        };
+
         /// <summary>
         /// Generates all properties for an object
         /// </summary>

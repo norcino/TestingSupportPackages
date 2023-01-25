@@ -34,56 +34,17 @@ namespace AnonymousData
                 typeof(StringBuilder)
             };
 
-        #region Unique values feature
-        private static AnyUnique anyUnique;
-        /// <summary>
-        /// Guarantee that the value returned in the following method is unique.
-        /// To avoid memory leaks consider calling Any.DisposeDefaultValues() when the unicity scope terminates, for example on a test teardown.
-        /// </summary>
-        /// <returns>Any instance which handles unique values</returns>
-        public static AnyUnique Unique { get
-            {
-                if (anyUnique == null)
-                {
-                    anyUnique = new AnyUnique();
-                }
-
-                return anyUnique;
-            }
+        #region Collections
+        public static AnyList ListOf(int? number = default)
+        {            
+            return new AnyList(number ?? Any.Int(minValue: 1, maxValue: 30));
         }
 
-        public static void ResetUniqueValues()
+        public static AnyArray ArrayOf(int? number = default)
         {
-            anyUnique = null;
+            return new AnyArray(number ?? Any.Int(minValue: 1, maxValue: 30));
         }
         #endregion
-
-        private static Func<bool, int, int, int> GenerateRandomIntValueHandlingUniqueness = (bool unique, int mi, int ma) =>
-        {
-            const int MaximumRetryIterations = 10000;
-            int result;
-            bool notUnique = false;
-
-            int iterations = 0;
-            do
-            {
-                if (unique)
-                {
-                    result = anyUnique.TryGetUniqueValue(Random().Next(mi, ma), out notUnique);
-                }
-                else
-                {
-                    result = Random().Next(mi, ma);
-                }
-
-                if (++iterations >= MaximumRetryIterations)
-                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider length, " +
-                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
-            }
-            while (notUnique);
-
-            return result;
-        };
 
         /// <summary>
         /// Random number is generated with the specified maximum length of digits
@@ -121,48 +82,7 @@ namespace AnonymousData
         {
             return GenerateRandomInt(maxLength, ref allowZero, onlyPositive, minValue, maxValue, false);
         }
-
-        private static int GenerateRandomInt(int maxLength, ref bool allowZero, bool onlyPositive, int? minValue, int? maxValue, bool unique)
-        {
-            if (_doNotAcceptDefaultValues)
-                allowZero = false;
-
-            var max = maxValue ?? int.MaxValue;
-            var min = minValue ?? int.MinValue;
-
-            if (maxLength < 1)
-                throw new ArgumentOutOfRangeException($"{nameof(maxLength)} must be greater than zero");
-
-            if (maxLength > 10)
-                throw new ArgumentOutOfRangeException($"{nameof(maxLength)} cannot be greater than 10");
-
-            if (maxValue.HasValue && minValue.HasValue)
-            {
-                return GenerateRandomIntValueHandlingUniqueness(unique, minValue.Value, maxValue.Value);
-            }
-
-            var maxValueForLength = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
-            if (minValue.HasValue)
-            {
-                return GenerateRandomIntValueHandlingUniqueness(unique, minValue.Value, maxValueForLength);
-            }
-
-            if (maxValue.HasValue)
-            {
-                var minimum = int.MinValue;
-                if (onlyPositive)
-                    minimum = 0;
-                if (!allowZero)
-                    minimum = 1;
-                return GenerateRandomIntValueHandlingUniqueness(unique, minimum, maxValue.Value);
-            }
-
-            if (onlyPositive)
-                return GenerateRandomIntValueHandlingUniqueness(unique, allowZero ? 0 : 1, maxValueForLength);
-
-            return GenerateRandomIntValueHandlingUniqueness(unique, min, max);
-        }
-
+                
         /// <summary>
         /// Generate a string with an optional prefix and a random suffix of the desired length
         /// </summary>
@@ -278,9 +198,9 @@ namespace AnonymousData
         /// var expectedResult = Any.Short();
         /// </code>
         /// <returns>Random short value</returns>
-        public static short Short()
+        public static short Short(short? minValue = null, short? maxValue = null)
         {
-            var result = (short)Random().Next(short.MinValue, short.MaxValue);
+            var result = (short)Random().Next(minValue ?? short.MinValue, maxValue ??short.MaxValue);
 
             if (_doNotAcceptDefaultValues && default(short) == result)
                 return Short();
@@ -388,10 +308,7 @@ namespace AnonymousData
         /// </code>
         /// <param name="maximumDays"></param>
         /// <returns></returns>
-        public static TimeSpan TimeSpan(int? maximumDays = null,
-            int? maximumHours = null,
-            int? maximumMinutes = null,
-            int? maximumSeconds = null)
+        public static TimeSpan TimeSpan(int? maximumDays = null, int? maximumHours = null, int? maximumMinutes = null, int? maximumSeconds = null)
         {
             if (maximumDays > 1000) throw new ArgumentOutOfRangeException("The supported maximum days is 1000");
             if (maximumMinutes > 59) throw new ArgumentOutOfRangeException("The supported maximum minutes is 59");
@@ -636,7 +553,7 @@ namespace AnonymousData
         /// <returns>A randomly generated value not in the exclusion list</returns>
         public static T NotIn<T>(IEnumerable<T> exclusions)
         {
-            var retry = 10000;
+            var retry = 20000;
             if (exclusions == null || !exclusions.Any())
                 return Any.Of<T>();
 
@@ -644,9 +561,13 @@ namespace AnonymousData
 
             while (exclusions.Contains(result) && retry >= 0)
             {
+                retry--;
+
                 if (retry==0)
-                throw new Exception("Exceeded the number of retry available to find a value outside of the exclusion list, use this feature wisely and consider length, " +
-                    "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+                    throw new Exception("Exceeded the number of retry available to find a value outside of the exclusion list, use this feature wisely and consider length, " +
+                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+
+                result = Any.Of<T>();
             }
 
             return result;
@@ -772,8 +693,103 @@ namespace AnonymousData
         {
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(String(prefix, length, charSet)));
         }
-        #region Private methods
 
+        #region Unique feature
+        /// <summary>
+        /// Guarantee that the value returned in the following method is unique.
+        /// To avoid memory leaks consider calling Any.DisposeDefaultValues() when the unicity scope terminates, for example on a test teardown.
+        /// </summary>
+        /// <returns>Any instance which handles unique values</returns>
+        public static AnyUnique Unique
+        {
+            get
+            {
+                if (anyUnique == null)
+                {
+                    anyUnique = new AnyUnique();
+                }
+
+                return anyUnique;
+            }
+        }
+
+        public static void ResetUniqueValues()
+        {
+            anyUnique = null;
+        }
+        #endregion
+
+        #region Private methods        
+        private static AnyUnique anyUnique;
+
+        private static Func<bool, int, int, int> GenerateRandomIntValueHandlingUniqueness = (bool unique, int mi, int ma) =>
+        {
+            const int MaximumRetryIterations = 10000;
+            int result;
+            bool notUnique = false;
+
+            int iterations = 0;
+            do
+            {
+                if (unique)
+                {
+                    result = anyUnique.TryGetUniqueValue(Random().Next(mi, ma), out notUnique);
+                }
+                else
+                {
+                    result = Random().Next(mi, ma);
+                }
+
+                if (++iterations >= MaximumRetryIterations)
+                    throw new Exception("Exceeded the number of retry available to find a unique value, use the Unique feature wisely and consider length, " +
+                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+            }
+            while (notUnique);
+
+            return result;
+        };
+
+        private static int GenerateRandomInt(int maxLength, ref bool allowZero, bool onlyPositive, int? minValue, int? maxValue, bool unique)
+        {
+            if (_doNotAcceptDefaultValues)
+                allowZero = false;
+
+            var max = maxValue ?? int.MaxValue;
+            var min = minValue ?? int.MinValue;
+
+            if (maxLength < 1)
+                throw new ArgumentOutOfRangeException($"{nameof(maxLength)} must be greater than zero");
+
+            if (maxLength > 10)
+                throw new ArgumentOutOfRangeException($"{nameof(maxLength)} cannot be greater than 10");
+
+            if (maxValue.HasValue && minValue.HasValue)
+            {
+                return GenerateRandomIntValueHandlingUniqueness(unique, minValue.Value, maxValue.Value);
+            }
+
+            var maxValueForLength = maxLength == 10 ? max : (int)(Math.Pow(10, maxLength)) - 1;
+            if (minValue.HasValue)
+            {
+                return GenerateRandomIntValueHandlingUniqueness(unique, minValue.Value, maxValueForLength);
+            }
+
+            if (maxValue.HasValue)
+            {
+                var minimum = int.MinValue;
+                if (onlyPositive)
+                    minimum = 0;
+                if (!allowZero)
+                    minimum = 1;
+                return GenerateRandomIntValueHandlingUniqueness(unique, minimum, maxValue.Value);
+            }
+
+            if (onlyPositive)
+                return GenerateRandomIntValueHandlingUniqueness(unique, allowZero ? 0 : 1, maxValueForLength);
+
+            return GenerateRandomIntValueHandlingUniqueness(unique, min, max);
+        }
+        
         /// <summary>
         /// Generates all properties for an object
         /// </summary>
@@ -864,15 +880,13 @@ namespace AnonymousData
 
             if (type?.BaseType == typeof(Enum))
             {
-                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(type).Length - 1);
-                return (object)Enum.GetValues(type).GetValue(randomIndex);
+                return Enum.GetValues(type).GetValue(Int(allowZero: true) % Enum.GetNames(type).Length);
             }
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && type.GetGenericArguments()[0].IsEnum)
             {
-                var enumType = type.GenericTypeArguments.First();
-                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(enumType).Length - 1);
-                return (object)Enum.GetValues(enumType).GetValue(randomIndex);
+                var enumType = type.GenericTypeArguments.First();                
+                return Enum.GetValues(enumType).GetValue(Int(allowZero: true) % Enum.GetNames(enumType).Length);
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(type))

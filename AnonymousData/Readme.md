@@ -7,6 +7,10 @@ Well I did often, and despite this could be normally prevented using good coding
 
 This library through the class _Any_, aims to help you and your team write clearer tests, but it can also be used in production code when random data is needed.
 
+One last reason to take into consideration, with it's pros and cons, is that the use of random values, introduces a flavour of fuzz testing in the unit tests.
+You might encounter rare failures when the generated value goes outside of the comfort zone.
+This is a good discovery as there might be a loose validation in the subject under test, or the generated ranges are not configured correctly.
+
 ## Supported types
 The following data types are supported for generation:
 
@@ -386,7 +390,8 @@ string url = Any.Url("ftp")
 ## Version 1.3.0 - 24/01/2023
 
 ### Bugfix
-None
+`NotIn` was not working properly and has been fixed.
+Fixed `Any.Of<enum>` where zero index was never choosen.
 
 ### Breaking changes
 None

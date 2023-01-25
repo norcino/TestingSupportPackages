@@ -39,7 +39,7 @@ namespace AnonymousData.Tests
         Yes = 0,
         Just = 100,
         For = -1,
-        Testing
+        Testing = 2
     }
 
     [TestClass]
@@ -291,7 +291,7 @@ namespace AnonymousData.Tests
 
             for (int i = 0; i < 1000; i++)
             {
-                Assert.IsFalse(Any.NotIn(exclusions) == ForTesting.For);
+                Assert.IsTrue(Any.NotIn(exclusions) == ForTesting.For);
             }
         }
 

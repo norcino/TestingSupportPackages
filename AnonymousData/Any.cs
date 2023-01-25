@@ -553,7 +553,7 @@ namespace AnonymousData
         /// <returns>A randomly generated value not in the exclusion list</returns>
         public static T NotIn<T>(IEnumerable<T> exclusions)
         {
-            var retry = 10000;
+            var retry = 20000;
             if (exclusions == null || !exclusions.Any())
                 return Any.Of<T>();
 
@@ -561,9 +561,13 @@ namespace AnonymousData
 
             while (exclusions.Contains(result) && retry >= 0)
             {
+                retry--;
+
                 if (retry==0)
-                throw new Exception("Exceeded the number of retry available to find a value outside of the exclusion list, use this feature wisely and consider length, " +
-                    "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+                    throw new Exception("Exceeded the number of retry available to find a value outside of the exclusion list, use this feature wisely and consider length, " +
+                        "ranges and other factors which can quickly lead to exaustion of available values to randomly find.");
+
+                result = Any.Of<T>();
             }
 
             return result;
@@ -876,15 +880,13 @@ namespace AnonymousData
 
             if (type?.BaseType == typeof(Enum))
             {
-                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(type).Length - 1);
-                return (object)Enum.GetValues(type).GetValue(randomIndex);
+                return Enum.GetValues(type).GetValue(Int(allowZero: true) % Enum.GetNames(type).Length);
             }
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && type.GetGenericArguments()[0].IsEnum)
             {
-                var enumType = type.GenericTypeArguments.First();
-                var randomIndex = Any.Int(minValue: 0, maxValue: Enum.GetNames(enumType).Length - 1);
-                return (object)Enum.GetValues(enumType).GetValue(randomIndex);
+                var enumType = type.GenericTypeArguments.First();                
+                return Enum.GetValues(enumType).GetValue(Int(allowZero: true) % Enum.GetNames(enumType).Length);
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(type))

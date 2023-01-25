@@ -1,4 +1,5 @@
 ﻿# AnonymousData
+[![.NET Core](https://github.com/norcino/TestingSupportPackages/actions/workflows/netcore-build-test.yml/badge.svg)](https://github.com/norcino/TestingSupportPackages/actions/workflows/netcore-build-test.yml)
 
 ## Why AnonymousData
 Have you have come across a unit test where a huge object is initialized so that it could be fed to the method under test?

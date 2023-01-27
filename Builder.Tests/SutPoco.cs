@@ -25,6 +25,7 @@ namespace Builder.Tests
         public DateTime DateTimeField;
         public TimeSpan TimeSpanField;
         public SutEnum EnumField;
+        public short ShortField;
 
         public SutPoco AnotherPocoProperty { get; set; }
         public List<SutPoco> MorePocosProperty { get; set; }
@@ -44,13 +45,14 @@ namespace Builder.Tests
         public Uri UriProperty { get; set; }
         public string GetOnlyProperty { get; }
         public string PrivateSetProperty { get; private set; }
+        public short ShortProperty { get; set; }
 
         public DateTime? NullableDateTime { get; set; }
         public int? NullableInt { get; set; }
         public double? NullableDouble { get; set; }
         public SutEnum? NullableEnum { get; set; }
         public TimeSpan? NullableTimeSpan { get; set; }
-        public Guid? NullableGuid { get; set; }
+        public Guid? NullableGuid { get; set; }        
     }
 #pragma warning restore 0649
 }

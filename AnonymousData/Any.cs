@@ -189,7 +189,7 @@ namespace AnonymousData
         }
 
         /// <summary>
-        /// Generate a random short value
+        /// Generate a random short value, by default returns only positive
         /// </summary>
         /// <example>
         /// Get a random Short
@@ -198,9 +198,9 @@ namespace AnonymousData
         /// var expectedResult = Any.Short();
         /// </code>
         /// <returns>Random short value</returns>
-        public static short Short(short? minValue = null, short? maxValue = null)
+        public static short Short(short? minValue = null, short? maxValue = null, bool onlyPositive = true)
         {
-            var result = (short)Random().Next(minValue ?? short.MinValue, maxValue ??short.MaxValue);
+            var result = (short)Random().Next(onlyPositive ? 0 : minValue ?? short.MinValue, maxValue ?? short.MaxValue);
 
             if (_doNotAcceptDefaultValues && default(short) == result)
                 return Short();

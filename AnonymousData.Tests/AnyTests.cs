@@ -363,6 +363,28 @@ namespace AnonymousData.Tests
         }
         #endregion
 
+        #region Short
+        [TestMethod]
+        public void Short_should_return_only_results_in_range()
+        {
+            for (int i = 0; i <= 90000; i++)
+            {
+                var s = Any.Short(0, 10);
+                Assert.IsTrue(s >= 0 && s <= 10);
+            }
+        }
+
+        [TestMethod]
+        public void Short_should_return_only_positive_values_by_default()
+        {
+            for (int i = 0; i <= 90000; i++)
+            {
+                var s = Any.Short();
+                Assert.IsTrue(s >= 0);
+            }
+        }
+        #endregion
+
         #region Long
         [TestMethod]
         public void Long_should_allow_to_specify_the_maximum_number_of_digits_the_returned_int_should_be_made_of()

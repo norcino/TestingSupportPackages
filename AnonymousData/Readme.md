@@ -33,7 +33,7 @@ The following data types are supported for generation:
 |Long|||Positive|
 |Of|||Object Type|
 |SByte|||
-|Short||Range|
+|Short||Positive, Range|
 |String|✔||Prefix, CharSet|
 |TimeSpan|||Range|
 |Uri|||Protocol|
@@ -387,6 +387,17 @@ string url = Any.Url("ftp")
 ````
 
 # Changelog
+## Version 1.3.1 - 27/01/2023
+
+### Bugfix
+None
+
+### Breaking changes
+None
+
+### Added features
+Added positive only and 
+
 
 ## Version 1.3.0 - 24/01/2023
 
@@ -398,7 +409,8 @@ Fixed `Any.Of<enum>` where zero index was never choosen.
 None
 
 ### Added features
-Added `Any.ListOf().` and `Any.ArrayOf().` methods to facilitate the creation of rispectively lists and arrays of random values.
+Added only positive option to `Any.Short()` which now by default returns positive values.
+
 
 ## Version 1.2.0 - 18/01/2023
 

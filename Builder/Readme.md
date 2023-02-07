@@ -236,3 +236,14 @@ public class MyCustomExclusions : IBuilderExlusionMapping
     }
 }
 ````
+
+## Version 1.2.0 - 07/02/2023
+
+### Bugfix
+Updated internal dependency causing issues when Builder was used in conjunction with the lates versions of AnonymousData.
+
+### Breaking changes
+None
+
+### Added features
+Added support to generate Immutable objects and other objects which did not have a parameterless constructor. This version also add support to the generation of string which might result handy when a list of strings is needed.

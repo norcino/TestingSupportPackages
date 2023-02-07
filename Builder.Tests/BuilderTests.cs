@@ -608,13 +608,62 @@ namespace Builder.Tests
         }
         #endregion
 
-        //[TestMethod]
-        //public void From_should_return_a_copy_of_the_original_object_of_the_customization_action_is_null()
-        //{
-        //    var original = Builder<SutPoco>.New().Build();
-        //    var copy = Builder<SutPoco>.From(original).Build();
+        #region Immutable
+        [TestMethod]
+        public void Build_should_successfully_generate_readonly_Immutable_objects()
+        {
+            var immutable = Builder<ReadOnlyImmutableObject>.New().Build();
 
-            
-        //}
+            Assert.IsFalse(string.IsNullOrEmpty(immutable.StringValue));
+            Assert.IsFalse(immutable.IntValue == 0);
+            Assert.IsTrue(immutable.ObjectValue == null);
+        }
+
+        [TestMethod]
+        public void Build_should_successfully_generate_multiple_readonly_Immutable_objects()
+        {
+            var listOfImmutables = Builder<ReadOnlyImmutableObject>.New().BuildMany(10);
+
+            Assert.IsTrue(listOfImmutables.Count() == 10);
+            foreach (var immutable in listOfImmutables)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(immutable.StringValue));
+                Assert.IsFalse(immutable.IntValue == 0);
+                Assert.IsTrue(immutable.ObjectValue == null);
+            }
+        }
+
+        [TestMethod]
+        public void Build_should_successfully_generate_readonly_Immutable_objects_with_hierarchy()
+        {
+            var immutable = Builder<ReadOnlyImmutableObject>.New().Build(1);
+
+            Assert.IsFalse(string.IsNullOrEmpty(immutable.StringValue));
+            Assert.IsFalse(immutable.IntValue == 0);
+            Assert.IsFalse(immutable.ObjectValue == null);
+        }
+        #endregion
+
+        #region strings
+        [TestMethod]
+        public void Build_should_successfully_generate_strings()
+        {
+            var generatedString = Builder<string>.New().Build();
+
+            Assert.IsFalse(string.IsNullOrEmpty(generatedString));
+        }
+
+        [TestMethod]
+        public void Build_should_successfully_generate_multiple_strings()
+        {
+            var listOfStrings = Builder<string>.New().BuildMany(10);
+
+            Assert.IsTrue(listOfStrings.Count() == 10);
+            foreach (var s in listOfStrings)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(s));
+            }
+        }
+        #endregion
     }
 }

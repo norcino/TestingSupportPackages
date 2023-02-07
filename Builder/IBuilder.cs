@@ -8,7 +8,7 @@ namespace Builder
     /// Each entity is generated creating random values for reference types, strings and dates.
     /// </summary>
     /// <typeparam name="TE">Type of the entity to be created</typeparam>
-    public interface IBuilder<TE> where TE : class, new()
+    public interface IBuilder<TE> where TE : class
     {
         /// <summary>
         /// Generates a default valid entity, by default does not create child entities, but this can be changed specifying the depth level.
